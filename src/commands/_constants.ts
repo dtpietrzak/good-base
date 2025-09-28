@@ -1,3 +1,4 @@
+import { AppCommand } from "./_types.ts";
 import echo from "./echo.ts";
 import insert from "./insert.ts";
 import read from "./read.ts";
@@ -13,7 +14,10 @@ export const types = [
   "null",
 ] as const;
 
-export const appCommands = {
+export type AppCommandKeys = keyof typeof appCommands;
+export type AppCommands<C extends AppCommandKeys> = typeof appCommands[C];
+
+export const appCommands: Record<string, AppCommand> = {
   echo: {
     command: "echo",
     args: { "text": "Text to echo back" },
@@ -37,7 +41,11 @@ export const appCommands = {
       key: "Key of the item to insert",
       value: "Value to insert",
       auth: "Authentication token",
-      upsert: "Whether to upsert if the key exists (true/false) default: true",
+      upsert: {
+        description:
+          "Whether to upsert if the key exists (true/false) default: true",
+        required: false,
+      },
     },
     description: "Insert an item with an index, key and value",
     function: insert,

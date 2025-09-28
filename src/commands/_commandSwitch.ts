@@ -1,4 +1,4 @@
-import { appCommands } from "./_constants.ts";
+import { AppCommandKeys, AppCommands, appCommands } from "./_constants.ts";
 
 function logCommandError(commandName: keyof typeof appCommands): void {
   const commandConfig = appCommands[commandName];
@@ -6,24 +6,34 @@ function logCommandError(commandName: keyof typeof appCommands): void {
 
   const argStrings: string[] = [];
 
-  for (const [argName, description] of Object.entries(commandConfig.args)) {
+  for (
+    const [
+      argName,
+      descriptionStringOrObj,
+    ] of Object.entries(commandConfig.args)
+  ) {
     const alias = argName[0]; // Use first letter as alias
-    const argDisplay =
-      `--${argName} <${description}> or -${alias} <${description}>`;
+    const description = typeof descriptionStringOrObj === "string"
+      ? descriptionStringOrObj
+      : descriptionStringOrObj.description;
+    const argRequired = typeof descriptionStringOrObj === "string"
+      ? true
+      : descriptionStringOrObj.required ?? true;
+    const argDisplay = `\n  --${argName} ${
+      argRequired ? "" : "(optional)"
+    } <${description}> or -${alias}`;
     argStrings.push(argDisplay);
   }
 
   console.error(
     `Error: Missing required arguments for command '${commandName}'.`,
   );
-  console.info(`Usage: ${commandName} ${argStrings.join(" ")}`);
+  console.info(`Usage Notes: ${commandName} ${argStrings.join(" ")}`);
 }
-
-type AppCommandKeys = keyof typeof appCommands;
 
 type CommandSwitchProps<C extends AppCommandKeys = AppCommandKeys> = {
   command: C;
-  parsedArgs: typeof appCommands[C]["args"];
+  parsedArgs: AppCommands<C>["args"];
 };
 
 export const commandSwitch = async (props: CommandSwitchProps) => {
@@ -41,7 +51,12 @@ export const commandSwitch = async (props: CommandSwitchProps) => {
     return;
   }
 
-  const requiredArgs = Object.keys(commandConfig.args);
+  const requiredArgs = Object.entries(commandConfig.args)
+    .filter(([, desc]) =>
+      typeof desc === "string" ? true : desc.required ?? true
+    )
+    .map(([argName]) => argName);
+
   const missingArgs = requiredArgs.filter((arg) => !(arg in props.parsedArgs));
 
   if (missingArgs.length > 0) {

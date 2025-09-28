@@ -1,12 +1,12 @@
 #!/usr/bin/env -S deno run --allow-read
 
-import type { Command } from "./commands/_types.ts";
-import { appCommands } from "./commands/_constants.ts";
+import type { AppCommand, Command } from "./commands/_types.ts";
+import { AppCommandKeys, AppCommands, appCommands } from "./commands/_constants.ts";
 import { CommandHistory, readInputWithHistory } from "./inputHistory.ts";
 import { parseArgs } from "./argParser.ts";
 import { commandSwitch } from "./commands/_commandSwitch.ts";
 
-const rootCommands: Command[] = [
+const rootCommands: (Command | AppCommand)[] = [
   {
     command: "help",
     args: {},
@@ -21,7 +21,7 @@ const rootCommands: Command[] = [
 
 const commands = [
   ...rootCommands,
-  ...appCommands,
+  ...Object.values(appCommands),
 ] as const;
 
 function showHelp(): void {
@@ -83,7 +83,10 @@ async function main() {
     const parsedArgs = parseArgs(commandArgs);
 
     // Switch on the command
-    await commandSwitch({ command, parsedArgs });
+    await commandSwitch({
+      command: command as AppCommandKeys,
+      parsedArgs: parsedArgs as AppCommands<AppCommandKeys>["args"],
+    });
   }
 }
 
