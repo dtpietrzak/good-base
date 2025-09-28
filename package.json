@@ -1,0 +1,19 @@
+{
+  "name": "good-base",
+  "version": "0.0.1",
+  "description": "super kv db in ts",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dtpietrzak/good-base.git"
+  },
+  "author": "David Pietrzak",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dtpietrzak/good-base/issues"
+  },
+  "homepage": "https://github.com/dtpietrzak/good-base#readme"
+}
