@@ -1,16 +1,25 @@
 import type { GoodBaseConfig } from "./src/config/types.ts";
 
 /**
- * Good-Base Configuration
+ * Good-Base Configuration Overrides
  * 
- * This is the main configuration file for good-base. You can use TypeScript/JavaScript
- * features like comments, conditionals, and computed values.
+ * This file contains optional overrides to the default configuration.
+ * Any settings not specified here will use OS-appropriate defaults.
+ * 
+ * The system automatically handles:
+ * - macOS: ~/Library/Application Support/good-base/
+ * - Linux: ~/.local/share/good-base/ (or $XDG_DATA_HOME/good-base/)
+ * - Windows: %APPDATA%\good-base\
+ * - Development: ./tmp/good-base/ (when NODE_ENV !== "production")
+ * - Override: Uses DATA_DIR environment variable if set
  */
+
 const config: GoodBaseConfig = {
   // Database Configuration
   database: {
     // Directory where all database files are stored
-    dataDirectory: "./data",
+    // Leave undefined to use OS-appropriate default location
+    dataDirectory: "./data", // Override: use local directory for this example
     
     // Maximum size for individual database files (in MB)
     // Large files may impact performance but allow more data per file
@@ -18,7 +27,8 @@ const config: GoodBaseConfig = {
     
     // Automatic backup settings
     enableBackups: true,
-    backupDirectory: "./backups",
+    // Uncomment to override the default OS-appropriate backup directory  
+    // backupDirectory: "/custom/path/to/backups",
     backupInterval: 24, // hours between backups
   },
 
@@ -84,7 +94,8 @@ const config: GoodBaseConfig = {
     
     // File logging (in addition to console)
     enableFileLogging: false,
-    logDirectory: "./logs",
+    // Uncomment to override the default OS-appropriate log directory
+    // logDirectory: "/custom/path/to/logs",
     maxLogFileSize: 10, // MB per log file
     logRetention: 5,    // Number of old log files to keep
     
@@ -94,8 +105,9 @@ const config: GoodBaseConfig = {
 
   // CLI Configuration
   cli: {
-    // Command history
-    historyFile: "./.good_history",
+    // Command history file
+    // Leave undefined to use OS-appropriate config directory  
+    historyFile: "./.good_history", // Override: use local file for this example
     historySize: 1000,
     
     // Display options

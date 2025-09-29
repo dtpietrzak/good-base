@@ -3,24 +3,31 @@
  * 
  * Copy this file to `good-base.config.ts` and customize as needed.
  * The TypeScript format allows for comments, type checking, and dynamic values.
+ * 
+ * Any settings not specified here will use OS-appropriate defaults:
+ * - macOS: ~/Library/Application Support/good-base/
+ * - Linux: ~/.local/share/good-base/ (or $XDG_DATA_HOME/good-base/)
+ * - Windows: %APPDATA%\good-base\
+ * - Development: ./tmp/good-base/ (when NODE_ENV !== "production")
+ * - Override: Uses DATA_DIR environment variable if set
  */
 
 import type { GoodBaseConfig } from "./src/config/types.ts";
 
 // You can use variables and logic in your config
 const isDevelopment = Deno.env.get("NODE_ENV") !== "production";
-const dataDir = Deno.env.get("DATA_DIR") || "./data";
 
 const config: GoodBaseConfig = {
   database: {
-    // Use environment variable or default
-    dataDirectory: dataDir,
+    // Use explicit directory (will override OS defaults)
+    dataDirectory: "./data",
     
     // Smaller files in development for easier debugging
     maxFileSize: isDevelopment ? 10 : 100,
     
     enableBackups: true,
-    backupDirectory: "./backups",
+    // Uncomment to override default OS-appropriate backup directory
+    // backupDirectory: "./custom-backups", 
     backupInterval: 24,
   },
 
@@ -56,13 +63,15 @@ const config: GoodBaseConfig = {
     // More verbose logging in development
     level: isDevelopment ? "debug" : "info",
     enableFileLogging: !isDevelopment, // Console only in dev
-    logDirectory: "./logs",
+    // Uncomment to override default OS-appropriate log directory
+    // logDirectory: "./custom-logs",
     maxLogFileSize: 10,
     logRetention: 5,
     enableRequestLogging: true,
   },
 
   cli: {
+    // Explicit history file (will override OS-appropriate default)
     historyFile: "./.good_history",
     historySize: 1000,
     enableColors: true,

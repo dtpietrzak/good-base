@@ -1,6 +1,7 @@
 import type { GoodBaseConfig, ConfigSource, PartialGoodBaseConfig } from "./types.ts";
-import { DEFAULT_CONFIG } from "./defaults.ts";
+import { getDefaultConfig } from "./defaults.ts";
 import { FileConfigSource, EnvironmentConfigSource } from "./sources.ts";
+import { ensureAppDirectories } from "./directories.ts";
 
 export class ConfigLoader {
   private sources: ConfigSource[] = [];
@@ -23,8 +24,8 @@ export class ConfigLoader {
       return this.loadedConfig;
     }
 
-    // Start with default configuration
-    let config: GoodBaseConfig = structuredClone(DEFAULT_CONFIG);
+    // Start with default configuration (with OS-appropriate directories)
+    let config: GoodBaseConfig = structuredClone(await getDefaultConfig());
 
     // Load from all sources in order of priority
     for (const source of this.sources) {
@@ -37,8 +38,45 @@ export class ConfigLoader {
       }
     }
 
+    // Ensure all necessary directories exist
+    await this.ensureDirectoriesExist(config);
+
     this.loadedConfig = config;
     return config;
+  }
+
+  private async ensureDirectoriesExist(config: GoodBaseConfig): Promise<void> {
+    const directories = [
+      config.database.dataDirectory,
+      config.database.backupDirectory,
+      config.logging.logDirectory,
+    ].filter(Boolean) as string[];
+
+    // Also ensure the config directory exists for history file
+    if (config.cli.historyFile) {
+      const historyDir = config.cli.historyFile.substring(0, config.cli.historyFile.lastIndexOf('/'));
+      if (historyDir) {
+        directories.push(historyDir);
+      }
+    }
+
+    // Create all directories
+    for (const dir of directories) {
+      try {
+        await Deno.mkdir(dir, { recursive: true });
+      } catch (error) {
+        if (!(error instanceof Deno.errors.AlreadyExists)) {
+          console.warn(`Failed to create directory ${dir}:`, error);
+        }
+      }
+    }
+
+    // Also ensure the full app directory structure exists
+    try {
+      await ensureAppDirectories("good-base");
+    } catch (error) {
+      console.warn("Failed to ensure app directories:", error);
+    }
   }
 
   private mergeConfigs(base: GoodBaseConfig, override: PartialGoodBaseConfig): GoodBaseConfig {

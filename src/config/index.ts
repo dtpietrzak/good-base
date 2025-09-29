@@ -66,4 +66,7 @@ export function getCliConfig() {
 
 // Re-export types for convenience
 export type { GoodBaseConfig } from "./types.ts";
-export { DEFAULT_CONFIG } from "./defaults.ts";
+export { getDefaultConfig } from "./defaults.ts";
+
+// Re-export directory utilities
+export { getAppDataDirectory, getAppDirectories, ensureAppDirectories } from "./directories.ts";
