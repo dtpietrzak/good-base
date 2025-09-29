@@ -60,4 +60,30 @@ export const processes: Record<string, Process> = {
     description: "Create an item with an index, key and value",
     function: create,
   } as const,
+  search: {
+    command: "search",
+    args: {
+      index: "Index of the item to search",
+      query: "Query to search for",
+      auth: "Authentication token",
+      limit: "(Optional) Limit the number of results returned",
+      offset: "(Optional) Offset the results by this number",
+    },
+    description: "Search for items in an index",
+    function: () => {
+      throw new Error("Not implemented yet");
+    },
+  } as const,
+  index: {
+    command: "index",
+    args: {
+      name: "Name of the index to create",
+      field: "Field to index",
+      auth: "Authentication token",
+    },
+    description: "Create a new index",
+    function: () => {
+      throw new Error("Not implemented yet");
+    },
+  } as const,
 } as const;

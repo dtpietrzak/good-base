@@ -1,8 +1,9 @@
-type CreateProps = {
+import type { AuthProps } from "./_types.ts";
+
+type CreateProps = AuthProps & {
   index: string;
   key: string;
   value: string;
-  auth: string;
   upsert?: string;
 };
 

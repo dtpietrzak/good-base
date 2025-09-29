@@ -1,7 +1,8 @@
-type ReadProps = {
+import type { AuthProps } from "./_types.ts";
+
+type ReadProps = AuthProps & {
   index: string;
   key: string;
-  auth: string;
 };
 
 export default function read(props: ReadProps) {
