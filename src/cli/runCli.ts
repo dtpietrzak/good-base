@@ -7,13 +7,15 @@ import {
 import { processHandler } from "./handleProcessCli.ts";
 import { parseArgs } from "./argParser.ts";
 import { CommandHistory, readInputWithHistory } from "./commandHistory.ts";
+import { getCliConfig } from "../config/index.ts";
 
 export async function runCli() {
   const history = new CommandHistory();
+  const cliConfig = getCliConfig();
 
   while (true) {
     // Print the prompt without a newline
-    await Deno.stdout.write(new TextEncoder().encode("good-base-> "));
+    await Deno.stdout.write(new TextEncoder().encode(cliConfig.prompt));
 
     // Read user input with history support
     const input = await readInputWithHistory(history);
@@ -35,6 +37,11 @@ export async function runCli() {
     // Check if user wants help
     if (input.toLowerCase() === "help") {
       showHelp();
+      continue;
+    }
+
+    if (input.toLowerCase() === "index-help") {
+      showIndexHelp();
       continue;
     }
 
@@ -94,4 +101,24 @@ function showHelp(): void {
     }
   }
   console.log("\n");
+}
+
+function showIndexHelp(): void {
+  console.log("\nIndex Levels:");
+  console.log("=============\n");
+  console.log(
+    "1. match: Only index exact values. Use this for fields where you need to retrieve items by exact key. The downside is that you cannot perform range queries or text searches on this index.\nexample queries: get item by exact key, get multiple items by exact keys (list of keys)\napproximate create efficiency: O(1) per insert, approximate storage efficiency: O(n)\n",
+  );
+
+  console.log(
+    "2. traverse: Index keys in sorted order. Use this for fields where you need range queries, sorted retrievals, or prefix/suffix lookups. The keys are stored in a structure that allows efficient ordered traversal. The downside is slightly higher storage cost and slower writes compared to 'match'.\nexample queries: get items between two values, get top N items, get items starting with 'prefix', get items ending with 'suffix'\napproximate create efficiency: O(log n) per insert, approximate storage efficiency: O(n)\n",
+  );
+
+  console.log(
+    "3. full: Index tokenized values for full-text search. Use this for fields where you need substring, word-based, or fuzzy search (ngrams, typos). The downside is higher storage and write cost compared to 'match' and 'traverse'.\nexample queries: search for items containing 'word', search for items containing 'multiple words', search with typos 'wrod'\napproximate create efficiency: O(n log n) per field value, approximate storage efficiency: O(n log n)\n",
+  );
+
+  console.log(
+    "\nChoose the appropriate index level based on your query needs and performance considerations.\n",
+  );
 }

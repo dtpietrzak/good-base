@@ -1,4 +1,4 @@
-import { AuthProps } from "./_types.ts";
+import { AuthProps } from "../_types.ts";
 
 type IndexProps = AuthProps & {
   name: string;

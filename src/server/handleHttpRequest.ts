@@ -14,9 +14,29 @@ export async function handleHttpRequest(request: Request): Promise<Response> {
     return createResponse({ success: true, info: "CORS preflight" });
   }
 
+  // Root endpoint - basic info
+  if (url.pathname === "/" || url.pathname === "") {
+    return createResponse({
+      success: true,
+      data: {
+        name: "good-base",
+        version: "0.0.1",
+        description: "A database system with CLI and HTTP API",
+        endpoints: {
+          "GET  /": "This endpoint - basic system information",
+          "GET  /help": "List available commands and their documentation",
+          "POST /<command>": "Execute a command via POST request",
+        },
+      },
+      info: "Good-Base API Server",
+    });
+  }
+
   // List available commands endpoint
   if (url.pathname === "/help") {
-    const _processes = Object.values(processes).map((proc) => ({
+    const _processes = Object.values(processes).filter((process) => {
+      return process.command !== "auth"; // Exclude auth process from public help
+    }).map((proc) => ({
       endpoint: `/${proc.command}`,
       description: proc.description,
       body: Object.fromEntries(
@@ -70,6 +90,6 @@ export async function handleHttpRequest(request: Request): Promise<Response> {
   return createResponse({
     success: false,
     error: "Endpoint not found",
-    info: `Available endpoints: GET /health, GET /commands, POST /<command>`,
+    info: `Available endpoints: GET /, GET /help, POST /<command>`,
   }, STATUS_CODE.NotFound);
 }

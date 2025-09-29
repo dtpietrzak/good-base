@@ -1,4 +1,5 @@
 import { type Processes, processes, type ProcessKeys } from "../_constants.ts";
+import { cliAuthManager } from "./authManager.ts";
 
 function logProcessError(processName: keyof typeof processes): void {
   const processConfig = processes[processName];
@@ -64,7 +65,16 @@ export const processHandler = async (props: ProcessSwitchProps) => {
   }
 
   try {
-    await processFunction(props.parsedArgs);
+    // Auto-inject auth token for commands that need it (except auth command itself)
+    const argsWithAuth = { ...props.parsedArgs };
+    if (props.process !== "auth" && "auth" in processConfig.args && !argsWithAuth.auth) {
+      const currentAuth = cliAuthManager.getCurrentAuth();
+      if (currentAuth) {
+        argsWithAuth.auth = currentAuth;
+      }
+    }
+
+    await processFunction(argsWithAuth);
   } catch (error) {
     console.error(`Error executing process '${props.process}':`, error);
   }

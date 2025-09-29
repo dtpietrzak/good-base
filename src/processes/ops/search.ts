@@ -1,4 +1,4 @@
-import type { AuthProps } from "./_types.ts";
+import type { AuthProps } from "../_types.ts";
 
 type SearchProps = AuthProps & {
   index: string;
