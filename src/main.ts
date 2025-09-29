@@ -7,6 +7,7 @@ import {
   getServerConfig,
   initializeConfig,
 } from "./config/index.ts";
+import { timeoutWrapper } from "./server/timeoutWrapper.ts";
 
 async function main() {
   console.log("\n\ngood-base initializing...\n");
@@ -25,13 +26,20 @@ async function main() {
       port: serverConfig.port,
       hostname: serverConfig.host,
       onListen: () => {},
-    }, handleHttpRequest);
+    }, async (request: Request) => {
+      return await timeoutWrapper({
+        request: request,
+        requestHandler: handleHttpRequest,
+        timeoutSeconds: serverConfig.requestTimeout,
+      })
+    });
 
     console.log("CLI - Type 'exit' to quit - Type 'help' for commands");
     console.log("====================================================");
     console.log(
       `HTTP Server running on http://${serverConfig.host}:${serverConfig.port}`,
     );
+    console.log(`Request timeout: ${serverConfig.requestTimeout}s`);
     console.log(`Available endpoints:`);
     console.log(`   GET  /           Basic system info`);
     console.log(`   GET  /help       Get some help`);

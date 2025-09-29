@@ -2,7 +2,6 @@ type EchoProps = {
   text: string;
 };
 
-export default function echo(props: EchoProps) {
-  console.log(props.text);
+export default function echo(props: EchoProps) {  
   return { success: true, data: { text: props.text } };
 }
