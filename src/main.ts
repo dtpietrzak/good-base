@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-net --allow-env
+#!/usr/bin/env -S deno run --allow-read --allow-net --allow-env --allow-import
 
 import { runCli } from "./cli/runCli.ts";
 import { handleHttpRequest } from "./server/handleHttpRequest.ts";

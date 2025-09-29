@@ -6,7 +6,7 @@ configuration sources with different priorities:
 ## Configuration Sources (in order of priority)
 
 1. **Environment Variables** (highest priority)
-2. **JSON Configuration File** (`./good-base.config.json`)
+2. **TypeScript Configuration File** (`./good-base.config.ts`)
 3. **Default Values** (lowest priority)## Configuration Sections
 
 ### Database Configuration
@@ -77,21 +77,33 @@ configuration sources with different priorities:
 
 ## Configuration Format
 
-### JSON Configuration (`good-base.config.json`)
+### TypeScript Configuration (`good-base.config.ts`)
 
-```json
-{
-  "database": {
-    "dataDirectory": "./data"
+```typescript
+import type { GoodBaseConfig } from "./src/config/types.ts";
+
+const config: GoodBaseConfig = {
+  // Database settings with helpful comments
+  database: {
+    dataDirectory: "./data", // Where to store database files
+    maxFileSize: 100,        // MB per database file
   },
-  "server": {
-    "port": 5555,
-    "host": "localhost"
+  
+  // Server configuration
+  server: {
+    port: 7777,
+    host: "localhost",
+    // Use specific origins in production
+    corsOrigins: ["https://myapp.com"],
   },
-  "cli": {
-    "authTimeoutMinutes": 30
-  }
-}
+  
+  // CLI settings
+  cli: {
+    authTimeoutMinutes: 30, // 0 = no timeout
+  },
+};
+
+export default config;
 ```
 
 ### Environment Variables
@@ -125,10 +137,17 @@ config --action reload
 
 ## Getting Started
 
-1. Copy `good-base.config.example.json` to `good-base.config.json`
+1. Copy `good-base.config.example.ts` to `good-base.config.ts`
 2. Edit the configuration file to match your needs
-3. Run `deno run --allow-read --allow-net --allow-env src/main.ts`
+3. Run `deno run --allow-read --allow-net --allow-env --allow-import src/main.ts`
 4. Use the `config` command in the CLI to verify your settings
+
+### TypeScript Config Benefits
+
+- **Comments**: Document your configuration choices
+- **Type Safety**: Get IDE completion and validation
+- **Conditional Logic**: Use JavaScript expressions for dynamic config
+- **Code Reuse**: Import shared values or functions
 
 ## Environment Variable Reference
 

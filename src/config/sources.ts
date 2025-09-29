@@ -1,4 +1,4 @@
-import type { ConfigSource, PartialGoodBaseConfig, DatabaseConfig, ServerConfig, AuthConfig, LoggingConfig, CliConfig } from "./types.ts";
+import type { ConfigSource, PartialGoodBaseConfig, DatabaseConfig, ServerConfig, AuthConfig, LoggingConfig, CliConfig, GoodBaseConfig } from "./types.ts";
 
 export class FileConfigSource implements ConfigSource {
   priority = 2;
@@ -7,8 +7,9 @@ export class FileConfigSource implements ConfigSource {
   
   async load(): Promise<PartialGoodBaseConfig> {
     try {
-      const text = await Deno.readTextFile(this.filePath);
-      return JSON.parse(text);
+      // Load TypeScript/JavaScript module config
+      const module = await import(`file://${Deno.cwd()}/${this.filePath}`);
+      return module.default as GoodBaseConfig;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
         return {};

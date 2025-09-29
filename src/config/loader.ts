@@ -8,7 +8,7 @@ export class ConfigLoader {
 
   constructor() {
     // Add default sources
-    this.addSource(new FileConfigSource("./good-base.config.json"));
+    this.addSource(new FileConfigSource("./good-base.config.ts"));
     this.addSource(new EnvironmentConfigSource());
   }
 
