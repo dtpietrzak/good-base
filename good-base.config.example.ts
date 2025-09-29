@@ -1,9 +1,9 @@
 /**
  * Example TypeScript Configuration for Good-Base
- * 
+ *
  * Copy this file to `good-base.config.ts` and customize as needed.
  * The TypeScript format allows for comments, type checking, and dynamic values.
- * 
+ *
  * Any settings not specified here will use OS-appropriate defaults:
  * - macOS: ~/Library/Application Support/good-base/
  * - Linux: ~/.local/share/good-base/ (or $XDG_DATA_HOME/good-base/)
@@ -21,25 +21,25 @@ const config: GoodBaseConfig = {
   database: {
     // Use explicit directory (will override OS defaults)
     dataDirectory: "./data",
-    
+
     // Smaller files in development for easier debugging
     maxFileSize: isDevelopment ? 10 : 100,
-    
+
     enableBackups: true,
     // Uncomment to override default OS-appropriate backup directory
-    // backupDirectory: "./custom-backups", 
+    // backupDirectory: "./custom-backups",
     backupInterval: 24,
   },
 
   server: {
     // Use port 3000 in development, 8080 in production
-    port: isDevelopment ? 3000 : 8080,
+    port: 7777,
     host: "localhost",
-    
+
     enableCors: true,
     // Restrict CORS in production
     corsOrigins: isDevelopment ? ["*"] : ["https://myapp.com"],
-    
+
     requestTimeout: 30,
     maxBodySize: 10,
   },
@@ -76,7 +76,7 @@ const config: GoodBaseConfig = {
     historySize: 1000,
     enableColors: true,
     prompt: isDevelopment ? "good-dev-> " : "good-base-> ",
-    
+
     // Longer timeout in development for convenience
     authTimeoutMinutes: isDevelopment ? 120 : 30,
   },

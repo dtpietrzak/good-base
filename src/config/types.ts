@@ -1,6 +1,6 @@
 export interface DatabaseConfig {
   /** Main directory where database files are stored */
-  dataDirectory: string;
+  dataDirectory?: string;
   /** Maximum file size for database files (in MB) */
   maxFileSize: number;
   /** Enable automatic backups */

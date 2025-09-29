@@ -19,7 +19,7 @@ export async function getDefaultConfig(): Promise<GoodBaseConfig> {
     },
     
     server: {
-      port: 5555,
+      port: 7777,
       host: "localhost",
       enableCors: true,
       corsOrigins: ["*"],

@@ -10,7 +10,6 @@ import type { GoodBaseConfig } from "./src/config/types.ts";
  * - macOS: ~/Library/Application Support/good-base/
  * - Linux: ~/.local/share/good-base/ (or $XDG_DATA_HOME/good-base/)
  * - Windows: %APPDATA%\good-base\
- * - Development: ./tmp/good-base/ (when NODE_ENV !== "production")
  * - Override: Uses DATA_DIR environment variable if set
  */
 
@@ -19,7 +18,7 @@ const config: GoodBaseConfig = {
   database: {
     // Directory where all database files are stored
     // Leave undefined to use OS-appropriate default location
-    dataDirectory: "./data", // Override: use local directory for this example
+    // dataDirectory: "./data", // Override: use local directory for this example
     
     // Maximum size for individual database files (in MB)
     // Large files may impact performance but allow more data per file
