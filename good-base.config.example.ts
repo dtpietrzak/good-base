@@ -62,7 +62,7 @@ const config: GoodBaseConfig = {
   logging: {
     // More verbose logging in development
     level: isDevelopment ? "debug" : "info",
-    enableFileLogging: !isDevelopment, // Console only in dev
+    enableCommandLogging: !isDevelopment, // Console only in dev
     // Uncomment to override default OS-appropriate log directory
     // logDirectory: "./custom-logs",
     maxLogFileSize: 10,

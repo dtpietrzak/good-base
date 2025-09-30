@@ -1,31 +1,8 @@
 import { type Processes, processes, type ProcessKeys } from "../_constants.ts";
+import { colorizeJson } from "../_utils/colorizeJson.ts";
 import { cliAuthManager } from "./authManager.ts";
-
-function logProcessError(processName: keyof typeof processes): void {
-  const processConfig = processes[processName];
-  if (!processConfig) return;
-
-  const argStrings: string[] = [];
-
-  for (
-    const [
-      argName,
-      description,
-    ] of Object.entries(processConfig.args)
-  ) {
-    const alias = argName[0]; // Use first letter as alias
-    const argRequired = !description.startsWith("(Optional)");
-    const argDisplay = `\n  --${argName} ${
-      argRequired ? "" : "(optional)"
-    } <${description}> or -${alias}`;
-    argStrings.push(argDisplay);
-  }
-
-  console.error(
-    `Error: Missing required arguments for process '${processName}'.`,
-  );
-  console.info(`Usage Notes: ${processName} ${argStrings.join(" ")}`);
-}
+import { commandLogger } from "./commandLogger.ts";
+import { bold, cyan, red } from "jsr:@std/fmt/colors";
 
 type ProcessSwitchProps<C extends ProcessKeys = ProcessKeys> = {
   process: C;
@@ -33,49 +10,86 @@ type ProcessSwitchProps<C extends ProcessKeys = ProcessKeys> = {
 };
 
 export const processHandler = async (props: ProcessSwitchProps) => {
-  if (!props.process) {
-    console.log("No process provided. Use 'help' for available processs.");
-    return;
-  }
-
-  const processConfig = processes[props.process];
-
-  if (!processConfig) {
-    console.log(
-      `Unknown process: ${props.process}. Use 'help' for available processs.`,
-    );
-    return;
-  }
-
-  const requiredArgs = Object.entries(processConfig.args)
-    .filter(([, desc]) => !desc.startsWith("(Optional)"))
-    .map(([argName]) => argName);
-
-  const missingArgs = requiredArgs.filter((arg) => !(arg in props.parsedArgs));
-
-  if (missingArgs.length > 0) {
-    logProcessError(props.process);
-    return;
-  }
-
-  const processFunction = processConfig.function;
-  if (!processFunction) {
-    console.error(`No function defined for process '${props.process}'.`);
-    return;
-  }
+  const authToken = cliAuthManager.getCurrentAuth();
 
   try {
+    if (!props.process) {
+      throw new Error(
+        "No process provided. Use 'help' for available processes.",
+      );
+    }
+
+    const processConfig = processes[props.process];
+
+    if (!processConfig) {
+      throw new Error(
+        `Unknown process: ${props.process}. Use 'help' for available processes.`,
+      );
+    }
+
+    const requiredArgs = Object.entries(processConfig.args)
+      .filter(([, desc]) => !desc.startsWith("(Optional)"))
+      .map(([argName]) => argName);
+
+    const missingArgs = requiredArgs.filter((arg) =>
+      !(arg in props.parsedArgs)
+    );
+
+    if (missingArgs.length > 0) {
+      const argStrings = Object.entries(processConfig.args).map(
+        ([argName, description]) => {
+          const alias = argName[0]; // Use first letter as alias
+          const argRequired = !description.startsWith("(Optional)");
+          return `\n  --${argName} ${
+            argRequired ? "" : "(optional)"
+          } <${description}> or -${alias}`;
+        },
+      );
+
+      const usageNotes = `\nUsage Notes: ${bold(props.process)} ${
+        argStrings.join(" ")
+      }`;
+      console.info(cyan(usageNotes));
+      throw new Error(`Missing required arguments: ${missingArgs.join(", ")}`);
+    }
+
+    const processFunction = processConfig.function;
+    if (!processFunction) {
+      throw new Error(`No function defined for process '${props.process}'.`);
+    }
+
     // Auto-inject auth token for commands that need it (except auth command itself)
     const argsWithAuth = { ...props.parsedArgs };
-    if (props.process !== "auth" && "auth" in processConfig.args && !argsWithAuth.auth) {
+    if (
+      props.process !== "auth" && "auth" in processConfig.args &&
+      !argsWithAuth.auth
+    ) {
       const currentAuth = cliAuthManager.getCurrentAuth();
       if (currentAuth) {
         argsWithAuth.auth = currentAuth;
       }
     }
 
-    await processFunction(argsWithAuth);
-  } catch (error) {
-    console.error(`Error executing process '${props.process}':`, error);
+    const processResponse = await processFunction(argsWithAuth);
+
+    // Syntax-highlighted output
+    console.log("\n" + colorizeJson(processResponse) + "\n");
+    await commandLogger.logCommand({
+      command: props.process,
+      auth: authToken,
+      args: props.parsedArgs,
+      success: processResponse.success,
+    });
+  } catch (caughtError) {
+    console.error(red("\n" + caughtError + "\n"));
+    await commandLogger.logCommand({
+      command: props.process,
+      auth: authToken,
+      args: props.parsedArgs,
+      success: false,
+      error: caughtError instanceof Error
+        ? caughtError.message
+        : String(caughtError),
+    });
   }
 };

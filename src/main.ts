@@ -2,55 +2,61 @@
 
 import { runCli } from "./cli/runCli.ts";
 import { handleHttpRequest } from "./server/handleHttpRequest.ts";
-import {
-  getDatabaseConfig,
-  getServerConfig,
-  initializeConfig,
-} from "./config/index.ts";
+import { getConfig, initializeConfig } from "./config/index.ts";
 import { timeoutWrapper } from "./server/timeoutWrapper.ts";
+import { bold, brightMagenta, cyan, gray, green, red } from "jsr:@std/fmt/colors";
 
 async function main() {
-  console.log("\n\ngood-base initializing...\n");
+  console.log(brightMagenta("\n\ngood-base initializing...\n"));
+  if (!Deno.env.get("DENO_ENV")) Deno.env.set("DENO_ENV", "production");
 
-  // Initialize configuration system
-  console.log("Loading configuration from: ", Deno.cwd());
   try {
     await initializeConfig();
-    const serverConfig = getServerConfig();
-    const dbConfig = getDatabaseConfig();
-    
-    console.log(`Database directory: ${dbConfig.dataDirectory}`);
-    console.log(`Backups enabled: ${dbConfig.enableBackups}`);    console.log("");
+    const config = getConfig();
+
+    console.log(
+      `${gray("Database directory:")} ${config.database.dataDirectory}`,
+    );
+    console.log(`${gray("Backups enabled:")} ${config.database.enableBackups}`);
+    console.log("");
 
     const server = Deno.serve({
-      port: serverConfig.port,
-      hostname: serverConfig.host,
+      port: config.server.port,
+      hostname: config.server.host,
       onListen: () => {},
     }, async (request: Request) => {
       return await timeoutWrapper({
         request: request,
         requestHandler: handleHttpRequest,
-        timeoutSeconds: serverConfig.requestTimeout,
-      })
+        timeoutSeconds: config.server.requestTimeout,
+      });
     });
 
-    console.log("CLI - Type 'exit' to quit - Type 'help' for commands");
+    console.log(
+      green(
+        `${bold("CLI")} - Type '${bold("exit")}' to quit - Type '${
+          bold("help")
+        }' for commands`,
+      ),
+    );
     console.log("====================================================");
     console.log(
-      `HTTP Server running on http://${serverConfig.host}:${serverConfig.port}`,
+      cyan(
+        `${bold("Server")} running on ${
+          bold(`http://${config.server.host}:${config.server.port}/`)
+        }`,
+      ),
     );
-    console.log(`Request timeout: ${serverConfig.requestTimeout}s`);
-    console.log(`Available endpoints:`);
-    console.log(`   GET  /           Basic system info`);
-    console.log(`   GET  /help       Get some help`);
-    console.log(`   POST /<command>  Execute a command\n`);
+    console.log(cyan(`   ${bold("GET  /")}           Basic system info`));
+    console.log(cyan(`   ${bold("GET  /help")}       Get some help`));
+    console.log(cyan(`   ${bold("POST /<command>")}  Execute a command\n`));
 
     await runCli();
 
     // Shutdown server when CLI exits
     await server.shutdown();
   } catch (error) {
-    console.error("Failed to start good-base:", error);
+    console.error(red("\nFailed to start good-base:"), error);
     Deno.exit(1);
   }
 }

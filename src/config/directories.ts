@@ -1,86 +1,55 @@
-/**
- * OS-specific directory utilities for good-base
- * Handles platform-specific data directories following OS conventions
- */
+import { join } from "jsr:@std/path";
+import { AppDirs } from "./_types.ts";
 
-/**
- * Get the appropriate application data directory for the current OS
- */
-export function getAppDataDirectory(appName: string = "good-base"): string {
-  // Check for explicit override first
+export function getAppBaseDir(appName = "good-base"): string {
+  // Explicit override
   const customDir = Deno.env.get("DATA_DIR");
-  if (customDir) {
-    return customDir;
-  }
+  if (customDir) return customDir;
 
-  // Development mode - use local tmp directory for sanity
-  const isDevelopment = Deno.env.get("NODE_ENV") !== "production";
-  if (isDevelopment) {
-    return `./tmp/${appName}`;
-  }
+  if (Deno.env.get("DENO_ENV") !== "production") return `./tmp/${appName}`;
 
-  // Production mode - use OS conventions
-  const os = Deno.build.os;
-  const homeDir = Deno.env.get("HOME") || Deno.env.get("USERPROFILE") || ".";
+  const home = Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? ".";
 
-  switch (os) {
-    case "darwin": { // macOS
-      return `${homeDir}/Library/Application Support/${appName}`;
+  switch (Deno.build.os) {
+    case "darwin": {
+      return join(home, "Library", "Application Support", appName);
     }
-    
-    case "linux": { // Linux
-      const xdgDataHome = Deno.env.get("XDG_DATA_HOME");
-      if (xdgDataHome) {
-        return `${xdgDataHome}/${appName}`;
-      }
-      return `${homeDir}/.local/share/${appName}`;
+    case "linux": {
+      const xdg = Deno.env.get("XDG_DATA_HOME");
+      return join(xdg ?? join(home, ".local", "share"), appName);
     }
-    
-    case "windows": { // Windows
+    case "windows": {
       const appData = Deno.env.get("APPDATA");
-      if (appData) {
-        return `${appData}\\${appName}`;
-      }
-      return `${homeDir}\\AppData\\Roaming\\${appName}`;
+      return join(appData ?? join(home, "AppData", "Roaming"), appName);
     }
-    
     default: {
-      // Fallback for unknown OS
-      return `${homeDir}/.${appName}`;
+      throw new Error(`Unsupported OS: ${Deno.build.os}`);
     }
   }
 }
 
-/**
- * Get the standard subdirectories within the app data directory
- */
-export function getAppDirectories(appName: string = "good-base") {
-  const baseDir = getAppDataDirectory(appName);
-  const sep = Deno.build.os === "windows" ? "\\" : "/";
-  
+export function getAppDirs(appName = "good-base"): AppDirs {
+  const base = getAppBaseDir(appName);
   return {
-    base: baseDir,
-    data: `${baseDir}${sep}data`,
-    config: `${baseDir}${sep}config`, 
-    logs: `${baseDir}${sep}logs`,
-    backups: `${baseDir}${sep}backups`,
-    cache: `${baseDir}${sep}cache`,
+    base,
+    data: join(base, "data"),
+    config: join(base, "config"),
+    cache: join(base, "cache"),
+    logs: join(base, "logs"),
+    backups: join(base, "backups"),
   };
 }
 
-/**
- * Ensure all necessary directories exist
- */
-export async function ensureAppDirectories(appName: string = "good-base"): Promise<void> {
-  const dirs = getAppDirectories(appName);
-  
+export async function ensureAppDirs(appName = "good-base"): Promise<AppDirs> {
+  const dirs = getAppDirs(appName);
   for (const [name, path] of Object.entries(dirs)) {
     try {
       await Deno.mkdir(path, { recursive: true });
-    } catch (error) {
-      if (!(error instanceof Deno.errors.AlreadyExists)) {
-        console.warn(`Failed to create ${name} directory at ${path}:`, error);
+    } catch (err) {
+      if (!(err instanceof Deno.errors.AlreadyExists)) {
+        console.warn(`Failed to create ${name} directory at ${path}:`, err);
       }
     }
   }
+  return dirs;
 }

@@ -56,7 +56,7 @@ export interface LoggingConfig {
   /** Logging level */
   level: "debug" | "info" | "warn" | "error";
   /** Enable file logging */
-  enableFileLogging: boolean;
+  enableCommandLogging: boolean;
   /** Log file directory */
   logDirectory?: string;
   /** Maximum log file size (in MB) */
@@ -103,4 +103,5 @@ export interface ConfigSource {
   load(): Promise<PartialGoodBaseConfig> | PartialGoodBaseConfig;
   /** Priority of this source (higher number = higher priority) */
   priority: number;
+  optional?: boolean;
 }

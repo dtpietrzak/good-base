@@ -4,6 +4,7 @@ import create from "./processes/ops/create.ts";
 import read from "./processes/ops/read.ts";
 import config from "./processes/config.ts";
 import auth from "./processes/auth.ts";
+import logs from "./processes/logs.ts";
 import databaseCreate from "./processes/database/database-create.ts";
 import databaseList from "./processes/database/database-list.ts";
 import databaseDelete from "./processes/database/database-delete.ts";
@@ -148,6 +149,15 @@ export const processes: Record<string, Process> = {
     },
     description: "Manage CLI authentication session",
     function: auth,
+  } as const,
+  logs: {
+    command: "logs",
+    args: {
+      limit: "(Optional) Number of log entries to show (default: 50)",
+      verbose: "(Optional) Show detailed information (true/false)",
+    },
+    description: "View command execution logs",
+    function: logs,
   } as const,
   "database-create": {
     command: "database-create",

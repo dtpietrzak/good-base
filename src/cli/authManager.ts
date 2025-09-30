@@ -1,4 +1,4 @@
-import { getCliConfig } from "../config/index.ts";
+import { getConfig } from "../config/index.ts";
 
 export interface AuthSession {
   token: string;
@@ -14,9 +14,9 @@ export class CliAuthManager {
    * Set the authentication token for CLI commands
    */
   setAuth(token: string): void {
-    const config = getCliConfig();
-    const expiresAt = config.authTimeoutMinutes > 0 
-      ? Date.now() + (config.authTimeoutMinutes * 60 * 1000)
+    const config = getConfig();
+    const expiresAt = config.cli.authTimeoutMinutes > 0 
+      ? Date.now() + (config.cli.authTimeoutMinutes * 60 * 1000)
       : undefined;
     
     this.currentAuth = {
@@ -24,8 +24,8 @@ export class CliAuthManager {
       expiresAt,
     };
 
-    if (config.authTimeoutMinutes > 0) {
-      console.log(`✓ Auth set. Will expire in ${config.authTimeoutMinutes} minutes.`);
+    if (config.cli.authTimeoutMinutes > 0) {
+      console.log(`✓ Auth set. Will expire in ${config.cli.authTimeoutMinutes} minutes.`);
     } else {
       console.log(`✓ Auth set (no expiration).`);
     }
@@ -68,11 +68,11 @@ export class CliAuthManager {
    * Get auth session info for display
    */
   getAuthInfo(): { hasAuth: boolean; expiresAt?: number; timeoutMinutes: number } {
-    const config = getCliConfig();
+    const config = getConfig();
     return {
       hasAuth: this.hasValidAuth(),
       expiresAt: this.currentAuth?.expiresAt,
-      timeoutMinutes: config.authTimeoutMinutes,
+      timeoutMinutes: config.cli.authTimeoutMinutes,
     };
   }
 

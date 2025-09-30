@@ -45,7 +45,7 @@ configuration sources with different priorities:
 ### Logging Configuration
 
 - `level`: Log level (debug|info|warn|error)
-- `enableFileLogging`: Write logs to files
+- `enableCommandLogging`: Write logs to files
 - `logDirectory`: Log file directory
 - `maxLogFileSize`: Maximum log file size in MB
 - `logRetention`: Number of log files to keep
@@ -164,7 +164,7 @@ All configuration options can be overridden with environment variables:
 - `GOOD_BASE_JWT_SECRET` → `auth.jwtSecret`
 - `GOOD_BASE_LOG_LEVEL` → `logging.level`
 - `GOOD_BASE_LOG_DIR` → `logging.logDirectory`
-- `GOOD_BASE_ENABLE_FILE_LOGGING` → `logging.enableFileLogging`
+- `GOOD_BASE_ENABLE_FILE_LOGGING` → `logging.enableCommandLogging`
 
 ## Validation
 

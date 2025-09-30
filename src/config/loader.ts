@@ -1,15 +1,21 @@
-import type { GoodBaseConfig, ConfigSource, PartialGoodBaseConfig } from "./types.ts";
+import type {
+  ConfigSource,
+  GoodBaseConfig,
+  PartialGoodBaseConfig,
+} from "./types.ts";
 import { getDefaultConfig } from "./defaults.ts";
-import { FileConfigSource, EnvironmentConfigSource } from "./sources.ts";
-import { ensureAppDirectories } from "./directories.ts";
+import { EnvironmentConfigSource, FileConfigSource } from "./sources.ts";
+import { ensureAppDirs } from "./directories.ts";
+import { AppDirs } from "./_types.ts";
+import { yellow } from "jsr:@std/fmt/colors";
 
 export class ConfigLoader {
   private sources: ConfigSource[] = [];
   private loadedConfig?: GoodBaseConfig;
 
-  constructor() {
+  constructor(private appDirs: AppDirs) {
     // Add default sources
-    this.addSource(new FileConfigSource("./good-base.config.ts"));
+    this.addSource(new FileConfigSource(this.appDirs, "good-base.config.js"));
     this.addSource(new EnvironmentConfigSource());
   }
 
@@ -25,7 +31,9 @@ export class ConfigLoader {
     }
 
     // Start with default configuration (with OS-appropriate directories)
-    let config: GoodBaseConfig = structuredClone(await getDefaultConfig());
+    let config: GoodBaseConfig = structuredClone(
+      getDefaultConfig(this.appDirs),
+    );
 
     // Load from all sources in order of priority
     for (const source of this.sources) {
@@ -33,8 +41,14 @@ export class ConfigLoader {
         const sourceConfig = await source.load();
         config = this.mergeConfigs(config, sourceConfig);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`Failed to load config from source: ${errorMessage}`);
+        const errorMessage = error instanceof Error
+          ? error.message
+          : String(error);
+        if (source.optional !== true) {
+          throw new Error(errorMessage);
+        } else {
+          console.warn(yellow(`ConfigLoader: ${errorMessage}`));
+        }
       }
     }
 
@@ -54,7 +68,10 @@ export class ConfigLoader {
 
     // Also ensure the config directory exists for history file
     if (config.cli.historyFile) {
-      const historyDir = config.cli.historyFile.substring(0, config.cli.historyFile.lastIndexOf('/'));
+      const historyDir = config.cli.historyFile.substring(
+        0,
+        config.cli.historyFile.lastIndexOf("/"),
+      );
       if (historyDir) {
         directories.push(historyDir);
       }
@@ -73,13 +90,16 @@ export class ConfigLoader {
 
     // Also ensure the full app directory structure exists
     try {
-      await ensureAppDirectories("good-base");
+      await ensureAppDirs("good-base");
     } catch (error) {
       console.warn("Failed to ensure app directories:", error);
     }
   }
 
-  private mergeConfigs(base: GoodBaseConfig, override: PartialGoodBaseConfig): GoodBaseConfig {
+  private mergeConfigs(
+    base: GoodBaseConfig,
+    override: PartialGoodBaseConfig,
+  ): GoodBaseConfig {
     const result = structuredClone(base);
 
     if (override.database) {
@@ -140,8 +160,13 @@ export class ConfigLoader {
     }
 
     // Auth validation
-    if (config.auth.required && !config.auth.defaultToken && config.auth.validationMethod === "static") {
-      errors.push("Authentication token is required when auth is enabled with static validation");
+    if (
+      config.auth.required && !config.auth.defaultToken &&
+      config.auth.validationMethod === "static"
+    ) {
+      errors.push(
+        "Authentication token is required when auth is enabled with static validation",
+      );
     }
     if (config.auth.validationMethod === "jwt" && !config.auth.jwtSecret) {
       errors.push("JWT secret is required when using JWT validation");
@@ -153,7 +178,7 @@ export class ConfigLoader {
     }
 
     // Logging validation
-    if (config.logging.enableFileLogging && !config.logging.logDirectory) {
+    if (config.logging.enableCommandLogging && !config.logging.logDirectory) {
       errors.push("Log directory is required when file logging is enabled");
     }
 

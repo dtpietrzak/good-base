@@ -7,15 +7,30 @@ import {
 import { processHandler } from "./handleProcessCli.ts";
 import { parseArgs } from "./argParser.ts";
 import { CommandHistory, readInputWithHistory } from "./commandHistory.ts";
-import { getCliConfig } from "../config/index.ts";
+import { getConfig } from "../config/index.ts";
+import { cliAuthManager } from "./authManager.ts";
+import { commandLogger } from "./commandLogger.ts";
+
+/**
+ * Log special commands like help, exit, etc.
+ */
+async function logSpecialCommand(command: string, args: Record<string, unknown>): Promise<void> {
+  const authToken = cliAuthManager.getCurrentAuth();
+  await commandLogger.logCommand({
+    command,
+    auth: authToken,
+    args,
+    success: true,
+  });
+}
 
 export async function runCli() {
   const history = new CommandHistory();
-  const cliConfig = getCliConfig();
+  const config = getConfig();
 
   while (true) {
     // Print the prompt without a newline
-    await Deno.stdout.write(new TextEncoder().encode(cliConfig.prompt));
+    await Deno.stdout.write(new TextEncoder().encode(config.cli.prompt));
 
     // Read user input with history support
     const input = await readInputWithHistory(history);
@@ -30,17 +45,20 @@ export async function runCli() {
 
     // Check if user wants to exit
     if (input.toLowerCase() === "exit") {
+      await logSpecialCommand("exit", {});
       console.log("Goodbye!");
       break;
     }
 
     // Check if user wants help
     if (input.toLowerCase() === "help") {
+      await logSpecialCommand("help", {});
       showHelp();
       continue;
     }
 
     if (input.toLowerCase() === "index-help") {
+      await logSpecialCommand("index-help", {});
       showIndexHelp();
       continue;
     }
