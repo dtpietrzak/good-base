@@ -1,7 +1,7 @@
 import { type Processes, processes, type ProcessKeys } from "../_constants.ts";
 import { colorizeJson } from "../_utils/colorizeJson.ts";
+import { logger } from "../_utils/logger/index.ts";
 import { cliAuthManager } from "./authManager.ts";
-import { commandLogger } from "./commandLogger.ts";
 import { bold, cyan, red } from "jsr:@std/fmt/colors";
 
 type ProcessSwitchProps<C extends ProcessKeys = ProcessKeys> = {
@@ -74,22 +74,21 @@ export const processHandler = async (props: ProcessSwitchProps) => {
 
     // Syntax-highlighted output
     console.log("\n" + colorizeJson(processResponse) + "\n");
-    await commandLogger.logCommand({
+    await logger({ type: "command" }).command({
+      timestamp: new Date().toISOString(),
       command: props.process,
-      auth: authToken,
       args: props.parsedArgs,
-      success: processResponse.success,
+      auth: authToken ?? null,
+      event: "RESULT",
     });
   } catch (caughtError) {
     console.error(red("\n" + caughtError + "\n"));
-    await commandLogger.logCommand({
+    await logger({ type: "command" }).command({
+      timestamp: new Date().toISOString(),
       command: props.process,
-      auth: authToken,
       args: props.parsedArgs,
-      success: false,
-      error: caughtError instanceof Error
-        ? caughtError.message
-        : String(caughtError),
+      auth: authToken ?? null,
+      event: "ERROR",
     });
   }
 };

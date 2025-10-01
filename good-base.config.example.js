@@ -9,21 +9,35 @@
  * - Linux: ~/.local/share/good-base/ (or $XDG_DATA_HOME/good-base/)
  * - Windows: %APPDATA%\good-base\
  * - Development: ./tmp/good-base/ (when NODE_ENV !== "production")
- * - Override: Uses DATA_DIR environment variable if set
+ * - Override: Uses GOOD_BASE_DATA_DIR environment variable if set
  */
 
+/**
+ * @import { GoodBaseConfig } from "./src/config/_types.ts"
+ * @type {GoodBaseConfig}
+ */
 const config = {
-  database: {
-    // Use explicit directory (will override OS defaults)
-    dataDirectory: "./data",
+  databases: {
+    main: {
+      // Use explicit directory - override the default location
+      databaseDirectory: "./main",
 
-    // Smaller files in development for easier debugging
-    maxFileSize: 100,
+      // Smaller files in development for easier debugging
+      maxFileSize: 100,
 
-    enableBackups: true,
-    // Uncomment to override default OS-appropriate backup directory
-    // backupDirectory: "./custom-backups",
-    backupInterval: 24,
+      enabledBackups: true,
+      // Uncomment to override default backup directory
+      // backupDirectory: "./custom-backups",
+      backupInterval: 24,
+    },
+    // You can add more databases here:
+    // analytics: {
+    //   databaseDirectory: "/Volumes/FastSSD/analytics",
+    //   backupDirectory: "/Volumes/BackupDrive/analytics-backups", 
+    //   enabledBackups: true,
+    //   backupInterval: 6,
+    //   maxFileSize: 500,
+    // },
   },
 
   server: {
@@ -61,14 +75,15 @@ const config = {
     // Uncomment to override default OS-appropriate log directory
     // logDirectory: "./custom-logs",
     maxLogFileSize: 10,
-    logRetention: 5,
+    maxLogFiles: 5,
     enableRequestLogging: true,
   },
 
   cli: {
     // Explicit history file (will override OS-appropriate default)
-    historyFile: "./.good_history",
-    historySize: 1000,
+    historyFile: "./.command_history",
+    historySize: 100,
+    persistentHistory: true, // Set to false to disable saving history to file
     enableColors: true,
     prompt: "good-base-> ",
 

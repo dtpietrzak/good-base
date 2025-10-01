@@ -2,12 +2,50 @@ export class CommandHistory {
   private history: string[] = [];
   private currentIndex: number = -1;
   private tempInput: string = "";
+  private commandCount: number = 0; // Track total commands added since last cleanup
 
-  addCommand(command: string): void {
+  constructor(
+    private historyConfig: { 
+      historyFile?: string; 
+      historySize: number;
+      persistentHistory: boolean;
+    },
+  ) {}
+
+  async initialize(): Promise<void> {
+    if (this.historyConfig.persistentHistory && this.historyConfig.historyFile) {
+      await this.loadHistoryFromFile();
+    }
+  }
+
+  async addCommand(command: string): Promise<void> {
     if (command.trim() && command !== this.history[this.history.length - 1]) {
       this.history.push(command);
+      this.commandCount++;
+      
+      // Persist to file if configured and persistent history is enabled
+      if (this.historyConfig.persistentHistory && this.historyConfig.historyFile) {
+        await this.appendCommandToFile(command);
+      }
+      
+      // Only truncate memory, not the file immediately
+      if (this.history.length > this.historyConfig.historySize) {
+        this.history = this.history.slice(-this.historyConfig.historySize);
+      }
+      
+      // Check if we need to clean up the file periodically
+      if (this.historyConfig.persistentHistory && this.historyConfig.historyFile && this.shouldCleanupFile()) {
+        await this.cleanupHistoryFile();
+      }
     }
     this.resetIndex();
+  }
+
+  private shouldCleanupFile(): boolean {
+    // Only cleanup every 100 commands, and only if we've exceeded our target size
+    // This prevents constant file rewrites while keeping file size reasonable
+    const cleanupInterval = 100;
+    return this.commandCount >= cleanupInterval && this.commandCount % cleanupInterval === 0;
   }
 
   getPrevious(currentInput: string): string {
@@ -41,6 +79,97 @@ export class CommandHistory {
   private resetIndex(): void {
     this.currentIndex = -1;
     this.tempInput = "";
+  }
+
+  private async loadHistoryFromFile(): Promise<void> {
+    try {
+      const historyContent = await Deno.readTextFile(this.historyConfig.historyFile!);
+      const lines = historyContent
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      // Load only the most recent commands up to historySize
+      this.history = lines.slice(-this.historyConfig.historySize);
+      // Reset command count since we just loaded from file
+      this.commandCount = 0;
+    } catch (error) {
+      // If file doesn't exist or can't be read, start with empty history
+      if (!(error instanceof Deno.errors.NotFound)) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`Warning: Could not load command history from ${this.historyConfig.historyFile}: ${errorMessage}`);
+      }
+      this.history = [];
+      this.commandCount = 0;
+    }
+  }
+
+  private async saveHistoryToFile(): Promise<void> {
+    try {
+      // Ensure the directory exists
+      const historyDir = this.historyConfig.historyFile!.split('/').slice(0, -1).join('/');
+      if (historyDir) {
+        await Deno.mkdir(historyDir, { recursive: true });
+      }
+      
+      // Write history to file
+      const historyContent = this.history.join('\n') + '\n';
+      await Deno.writeTextFile(this.historyConfig.historyFile!, historyContent);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`Warning: Could not save command history to ${this.historyConfig.historyFile}: ${errorMessage}`);
+    }
+  }
+
+  private async appendCommandToFile(command: string): Promise<void> {
+    try {
+      // Ensure the directory exists
+      const historyDir = this.historyConfig.historyFile!.split('/').slice(0, -1).join('/');
+      if (historyDir) {
+        await Deno.mkdir(historyDir, { recursive: true });
+      }
+      
+      // Append command to file
+      const file = await Deno.open(this.historyConfig.historyFile!, { 
+        create: true, 
+        append: true 
+      });
+      
+      await file.write(new TextEncoder().encode(command + '\n'));
+      file.close();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`Warning: Could not append command to history file ${this.historyConfig.historyFile}: ${errorMessage}`);
+    }
+  }
+
+  private async cleanupHistoryFile(): Promise<void> {
+    try {
+      // Read the current file to get the total count
+      const historyContent = await Deno.readTextFile(this.historyConfig.historyFile!);
+      const allLines = historyContent
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      // Only rewrite if the file is actually larger than our limit
+      if (allLines.length > this.historyConfig.historySize) {
+        const trimmedHistory = allLines.slice(-this.historyConfig.historySize);
+        const historyContent = trimmedHistory.join('\n') + '\n';
+        await Deno.writeTextFile(this.historyConfig.historyFile!, historyContent);
+        
+        // Reset command count since we just cleaned up
+        this.commandCount = 0;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`Warning: Could not cleanup command history file ${this.historyConfig.historyFile}: ${errorMessage}`);
+    }
+  }
+
+  // Add method to get current history (useful for debugging)
+  getHistory(): string[] {
+    return [...this.history];
   }
 }
 

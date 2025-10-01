@@ -1,23 +1,32 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net --allow-env --allow-import
 
 import { runCli } from "./cli/runCli.ts";
+import { initializeConfig } from "./config/index.ts";
 import { handleHttpRequest } from "./server/handleHttpRequest.ts";
-import { getConfig, initializeConfig } from "./config/index.ts";
 import { timeoutWrapper } from "./server/timeoutWrapper.ts";
-import { bold, brightMagenta, cyan, gray, green, red } from "jsr:@std/fmt/colors";
+import {
+  bold,
+  brightMagenta,
+  cyan,
+  gray,
+  green,
+  setColorEnabled,
+} from "jsr:@std/fmt/colors";
 
 async function main() {
   console.log(brightMagenta("\n\ngood-base initializing...\n"));
   if (!Deno.env.get("DENO_ENV")) Deno.env.set("DENO_ENV", "production");
 
   try {
-    await initializeConfig();
-    const config = getConfig();
+    const { config } = await initializeConfig();
+    if (config.cli.enableColors === false) setColorEnabled(false);
 
     console.log(
-      `${gray("Database directory:")} ${config.database.dataDirectory}`,
+      `${gray("Databases:")}\n${
+        Object.keys(config.databases).map((name) => `  - ${name}`)
+          .join("\n")
+      }`,
     );
-    console.log(`${gray("Backups enabled:")} ${config.database.enableBackups}`);
     console.log("");
 
     const server = Deno.serve({
@@ -51,12 +60,12 @@ async function main() {
     console.log(cyan(`   ${bold("GET  /help")}       Get some help`));
     console.log(cyan(`   ${bold("POST /<command>")}  Execute a command\n`));
 
-    await runCli();
+    await runCli(config);
 
     // Shutdown server when CLI exits
     await server.shutdown();
   } catch (error) {
-    console.error(red("\nFailed to start good-base:"), error);
+    console.error(error);
     Deno.exit(1);
   }
 }

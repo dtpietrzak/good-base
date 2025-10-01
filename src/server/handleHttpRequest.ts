@@ -35,7 +35,7 @@ export async function handleHttpRequest(request: Request): Promise<Response> {
   // List available commands endpoint
   if (url.pathname === "/help") {
     const _processes = Object.values(processes).filter((process) => {
-      return process.command !== "auth"; // Exclude auth process from public help
+      return process.on.http;
     }).map((proc) => ({
       endpoint: `/${proc.command}`,
       description: proc.description,
@@ -65,6 +65,15 @@ export async function handleHttpRequest(request: Request): Promise<Response> {
         success: false,
         error: "No command specified in URL path",
       }, STATUS_CODE.BadRequest);
+    }
+
+    const processConfig = processes[command as keyof typeof processes];
+    if (!processConfig || processConfig.on.http === false) {
+      return createResponse({
+        success: false,
+        error: `Unknown or unsupported command: '${command}'`,
+        info: `Use GET /help to list available commands`,
+      }, STATUS_CODE.NotFound);
     }
 
     try {

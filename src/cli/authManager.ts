@@ -1,4 +1,4 @@
-import { getConfig } from "../config/index.ts";
+import { getConfig } from "../config/state.ts";
 
 export interface AuthSession {
   token: string;
@@ -7,7 +7,7 @@ export interface AuthSession {
 
 export class CliAuthManager {
   private currentAuth: AuthSession | null = null;
-  
+
   constructor() {}
 
   /**
@@ -15,17 +15,19 @@ export class CliAuthManager {
    */
   setAuth(token: string): void {
     const config = getConfig();
-    const expiresAt = config.cli.authTimeoutMinutes > 0 
+    const expiresAt = config.cli.authTimeoutMinutes > 0
       ? Date.now() + (config.cli.authTimeoutMinutes * 60 * 1000)
       : undefined;
-    
+
     this.currentAuth = {
       token,
       expiresAt,
     };
 
     if (config.cli.authTimeoutMinutes > 0) {
-      console.log(`✓ Auth set. Will expire in ${config.cli.authTimeoutMinutes} minutes.`);
+      console.log(
+        `✓ Auth set. Will expire in ${config.cli.authTimeoutMinutes} minutes.`,
+      );
     } else {
       console.log(`✓ Auth set (no expiration).`);
     }
@@ -67,7 +69,11 @@ export class CliAuthManager {
   /**
    * Get auth session info for display
    */
-  getAuthInfo(): { hasAuth: boolean; expiresAt?: number; timeoutMinutes: number } {
+  getAuthInfo(): {
+    hasAuth: boolean;
+    expiresAt?: number;
+    timeoutMinutes: number;
+  } {
     const config = getConfig();
     return {
       hasAuth: this.hasValidAuth(),

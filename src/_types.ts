@@ -2,6 +2,7 @@ export type Command = {
   command: string;
   args: Record<string, string>;
   description: string;
+  on: { cli: boolean; http: boolean };
 };
 
 export type Process = Command & {

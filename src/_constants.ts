@@ -4,7 +4,6 @@ import create from "./processes/ops/create.ts";
 import read from "./processes/ops/read.ts";
 import config from "./processes/config.ts";
 import auth from "./processes/auth.ts";
-import logs from "./processes/logs.ts";
 import databaseCreate from "./processes/database/database-create.ts";
 import databaseList from "./processes/database/database-list.ts";
 import databaseDelete from "./processes/database/database-delete.ts";
@@ -34,16 +33,19 @@ export const rootCommands: Command[] = [
     command: "help",
     args: {},
     description: "Show this help message",
+    on: { cli: true, http: true },
   } as const,
   {
     command: "index-help",
     args: {},
     description: "Show detailed information about index levels",
+    on: { cli: true, http: true },
   } as const,
   {
     command: "exit",
     args: {},
     description: "Exit the CLI",
+    on: { cli: true, http: true },
   } as const,
 ] as const;
 
@@ -53,6 +55,7 @@ export const processes: Record<string, Process> = {
     args: { "text": "Text to echo back" },
     description: "Echo back any text you type",
     function: echo,
+    on: { cli: true, http: false },
   } as const,
   read: {
     command: "read",
@@ -64,6 +67,7 @@ export const processes: Record<string, Process> = {
     },
     description: "Read an item by index and key",
     function: read,
+    on: { cli: true, http: true },
   } as const,
   create: {
     command: "create",
@@ -78,6 +82,7 @@ export const processes: Record<string, Process> = {
     },
     description: "Create an item with an index, key and value",
     function: create,
+    on: { cli: true, http: true },
   } as const,
   search: {
     command: "search",
@@ -93,13 +98,15 @@ export const processes: Record<string, Process> = {
     function: () => {
       throw new Error("Not implemented yet");
     },
+    on: { cli: true, http: true },
   } as const,
   "index-create": {
     command: "index-create",
     args: {
       db: "Database to create the index in",
       name: "Name of the index to create",
-      level: `Level of the indexing (match: only index exact matches, traverse: index keys to be retrieved in sorted orders, full: index all values for full text search) - For more details use the index-help command.`,
+      level:
+        `Level of the indexing (match: only index exact matches, traverse: index keys to be retrieved in sorted orders, full: index all values for full text search) - For more details use the index-help command.`,
       field: "Field to index",
       auth: "Authentication token",
     },
@@ -107,6 +114,7 @@ export const processes: Record<string, Process> = {
     function: () => {
       throw new Error("Not implemented yet");
     },
+    on: { cli: true, http: true },
   } as const,
   "index-list": {
     command: "index-list",
@@ -118,6 +126,7 @@ export const processes: Record<string, Process> = {
     function: () => {
       throw new Error("Not implemented yet");
     },
+    on: { cli: true, http: true },
   } as const,
   "index-delete": {
     command: "index-delete",
@@ -130,15 +139,17 @@ export const processes: Record<string, Process> = {
     function: () => {
       throw new Error("Not implemented yet");
     },
+    on: { cli: true, http: true },
   } as const,
   config: {
     command: "config",
     args: {
-      action: "(Optional) Action to perform: show, reload - default: show",
-      key: "(Optional) Specific configuration key to show (e.g., 'database.dataDirectory')",
+      key:
+        "(Optional) Specific configuration key to show (e.g., 'database.dataDirectory')",
     },
     description: "Show or manage configuration settings",
     function: config,
+    on: { cli: true, http: false },
   } as const,
   auth: {
     command: "auth",
@@ -149,15 +160,7 @@ export const processes: Record<string, Process> = {
     },
     description: "Manage CLI authentication session",
     function: auth,
-  } as const,
-  logs: {
-    command: "logs",
-    args: {
-      limit: "(Optional) Number of log entries to show (default: 50)",
-      verbose: "(Optional) Show detailed information (true/false)",
-    },
-    description: "View command execution logs",
-    function: logs,
+    on: { cli: true, http: false },
   } as const,
   "database-create": {
     command: "database-create",
@@ -168,6 +171,7 @@ export const processes: Record<string, Process> = {
     },
     description: "Create a new database",
     function: databaseCreate,
+    on: { cli: true, http: true },
   } as const,
   "database-list": {
     command: "database-list",
@@ -177,6 +181,7 @@ export const processes: Record<string, Process> = {
     },
     description: "List all databases",
     function: databaseList,
+    on: { cli: true, http: true },
   } as const,
   "database-delete": {
     command: "database-delete",
@@ -187,5 +192,6 @@ export const processes: Record<string, Process> = {
     },
     description: "Delete a database and all its contents",
     function: databaseDelete,
+    on: { cli: true, http: true },
   } as const,
 } as const;

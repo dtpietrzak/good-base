@@ -7,26 +7,37 @@ import {
 import { processHandler } from "./handleProcessCli.ts";
 import { parseArgs } from "./argParser.ts";
 import { CommandHistory, readInputWithHistory } from "./commandHistory.ts";
-import { getConfig } from "../config/index.ts";
 import { cliAuthManager } from "./authManager.ts";
-import { commandLogger } from "./commandLogger.ts";
+import { GoodBaseConfig } from "../config/_types.ts";
+import { logger } from "../_utils/logger/index.ts";
 
 /**
  * Log special commands like help, exit, etc.
  */
-async function logSpecialCommand(command: string, args: Record<string, unknown>): Promise<void> {
-  const authToken = cliAuthManager.getCurrentAuth();
-  await commandLogger.logCommand({
+async function logSpecialCommand(
+  command: string,
+  args: Record<string, unknown>,
+): Promise<void> {
+  const authId = cliAuthManager.getCurrentAuth();
+  const log = logger({ type: "command" });
+  await log.command({
+    timestamp: new Date().toISOString(),
     command,
-    auth: authToken,
     args,
-    success: true,
+    auth: authId ?? null,
+    event: "CALL",
   });
 }
 
-export async function runCli() {
-  const history = new CommandHistory();
-  const config = getConfig();
+export async function runCli(config: GoodBaseConfig) {
+  const history = new CommandHistory({
+    historyFile: config.cli.historyFile,
+    historySize: config.cli.historySize,
+    persistentHistory: config.cli.persistentHistory,
+  });
+
+  // Initialize history from file
+  await history.initialize();
 
   while (true) {
     // Print the prompt without a newline
@@ -41,7 +52,7 @@ export async function runCli() {
     }
 
     // Add to history
-    history.addCommand(input);
+    await history.addCommand(input);
 
     // Check if user wants to exit
     if (input.toLowerCase() === "exit") {
