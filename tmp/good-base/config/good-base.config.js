@@ -13,7 +13,7 @@
  */
 
 /**
- * @import { GoodBaseConfig } from "./src/config/_types.ts"
+ * @import { GoodBaseConfig } from "../../../config/_types.ts"
  * @type {GoodBaseConfig}
  */
 const config = {
@@ -70,7 +70,7 @@ const config = {
 
   logging: {
     // More verbose logging in development
-    level: "debug",
+    level: "error",
     enableCommandLogging: true, // Console only in dev
     // Uncomment to override default OS-appropriate log directory
     // logDirectory: "./custom-logs",

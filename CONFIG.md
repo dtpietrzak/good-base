@@ -42,6 +42,8 @@ configuration sources with different priorities:
 - `enableCache`: Cache frequently used indexes
 - `maxCacheSize`: Maximum cache size in MB
 
+**Note**: Index settings are configured when creating individual indexes, not through the main configuration file.
+
 ### Logging Configuration
 
 - `level`: Log level (debug|info|warn|error)
@@ -151,20 +153,93 @@ config --action reload
 
 ## Environment Variable Reference
 
-All configuration options can be overridden with environment variables:
+All configuration options can be overridden with environment variables using the `GOOD_BASE_` prefix. The system automatically converts environment variable names to the corresponding configuration paths:
 
-- `GOOD_BASE_DATA_DIR` → `database.dataDirectory`
-- `GOOD_BASE_BACKUP_DIR` → `database.backupDirectory`
-- `GOOD_BASE_ENABLE_BACKUPS` → `database.enableBackups`
-- `GOOD_BASE_PORT` → `server.port`
-- `GOOD_BASE_HOST` → `server.host`
-- `GOOD_BASE_CORS_ORIGINS` → `server.corsOrigins` (comma-separated)
-- `GOOD_BASE_AUTH_REQUIRED` → `auth.required`
-- `GOOD_BASE_AUTH_TOKEN` → `auth.defaultToken`
-- `GOOD_BASE_JWT_SECRET` → `auth.jwtSecret`
-- `GOOD_BASE_LOG_LEVEL` → `logging.level`
-- `GOOD_BASE_LOG_DIR` → `logging.logDirectory`
-- `GOOD_BASE_ENABLE_FILE_LOGGING` → `logging.enableCommandLogging`
+### Environment Variable Naming Convention
+
+- Use `GOOD_BASE_` as the prefix
+- Use underscores (`_`) to separate nested object properties
+- Property names are automatically converted from `SNAKE_CASE` to `camelCase`
+
+### Examples
+
+```bash
+# Server configuration
+export GOOD_BASE_SERVER_PORT=8080
+export GOOD_BASE_SERVER_HOST="0.0.0.0"
+export GOOD_BASE_SERVER_ENABLE_CORS=true
+export GOOD_BASE_SERVER_CORS_ORIGINS='["https://example.com", "https://api.example.com"]'
+
+# Database configuration
+export GOOD_BASE_DATABASES_MAIN_MAX_FILE_SIZE=200
+export GOOD_BASE_DATABASES_MAIN_ENABLED_BACKUPS=true
+export GOOD_BASE_DATABASES_MAIN_BACKUP_INTERVAL=12
+
+# Authentication
+export GOOD_BASE_AUTH_REQUIRED=true
+export GOOD_BASE_AUTH_DEFAULT_TOKEN="your-secret-token"
+export GOOD_BASE_AUTH_VALIDATION_METHOD="jwt"
+
+# Logging
+export GOOD_BASE_LOGGING_LEVEL="debug"
+export GOOD_BASE_LOGGING_ENABLE_COMMAND_LOGGING=true
+export GOOD_BASE_LOGGING_MAX_LOG_FILE_SIZE=25
+
+# CLI
+export GOOD_BASE_CLI_HISTORY_SIZE=500
+export GOOD_BASE_CLI_ENABLE_COLORS=false
+export GOOD_BASE_CLI_AUTH_TIMEOUT_MINUTES=60
+```
+
+### Type Conversion
+
+Environment variables are automatically converted to the appropriate types:
+
+- **Booleans**: `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off` (case-insensitive)
+- **Numbers**: Integers and floating-point numbers are automatically detected
+- **Arrays**: JSON arrays (`["item1", "item2"]`) or comma-separated values (`item1,item2`)
+- **Objects**: JSON objects for complex nested structures
+- **Strings**: Default fallback for all other values
+
+### Advanced Usage
+
+For complex configurations, you can use JSON format in environment variables:
+
+```bash
+export GOOD_BASE_SERVER_CORS_ORIGINS='["https://app.example.com", "https://admin.example.com"]'
+export GOOD_BASE_DATABASES='{"main": {"maxFileSize": 100}, "analytics": {"maxFileSize": 500}}'
+```
+
+### Complete Mapping Reference
+
+Here's how environment variables map to configuration properties:
+
+| Environment Variable | Configuration Path |
+|---------------------|-------------------|
+| `GOOD_BASE_DATABASES_MAIN_MAX_FILE_SIZE` | `databases.main.maxFileSize` |
+| `GOOD_BASE_DATABASES_MAIN_ENABLED_BACKUPS` | `databases.main.enabledBackups` |
+| `GOOD_BASE_DATABASES_MAIN_BACKUP_INTERVAL` | `databases.main.backupInterval` |
+| `GOOD_BASE_SERVER_PORT` | `server.port` |
+| `GOOD_BASE_SERVER_HOST` | `server.host` |
+| `GOOD_BASE_SERVER_ENABLE_CORS` | `server.enableCors` |
+| `GOOD_BASE_SERVER_CORS_ORIGINS` | `server.corsOrigins` |
+| `GOOD_BASE_SERVER_REQUEST_TIMEOUT` | `server.requestTimeout` |
+| `GOOD_BASE_SERVER_MAX_BODY_SIZE` | `server.maxBodySize` |
+| `GOOD_BASE_AUTH_REQUIRED` | `auth.required` |
+| `GOOD_BASE_AUTH_DEFAULT_TOKEN` | `auth.defaultToken` |
+| `GOOD_BASE_AUTH_VALIDATION_METHOD` | `auth.validationMethod` |
+| `GOOD_BASE_LOGGING_LEVEL` | `logging.level` |
+| `GOOD_BASE_LOGGING_ENABLE_COMMAND_LOGGING` | `logging.enableCommandLogging` |
+| `GOOD_BASE_LOGGING_ENABLE_REQUEST_LOGGING` | `logging.enableRequestLogging` |
+| `GOOD_BASE_LOGGING_MAX_LOG_FILE_SIZE` | `logging.maxLogFileSize` |
+| `GOOD_BASE_LOGGING_MAX_LOG_FILES` | `logging.maxLogFiles` |
+| `GOOD_BASE_CLI_HISTORY_SIZE` | `cli.historySize` |
+| `GOOD_BASE_CLI_PERSISTENT_HISTORY` | `cli.persistentHistory` |
+| `GOOD_BASE_CLI_ENABLE_COLORS` | `cli.enableColors` |
+| `GOOD_BASE_CLI_PROMPT` | `cli.prompt` |
+| `GOOD_BASE_CLI_AUTH_TIMEOUT_MINUTES` | `cli.authTimeoutMinutes` |
+
+**Note**: This mapping is automatically generated based on your configuration structure. As you add or modify configuration options in `good-base.config.example.js`, the environment variable support will automatically adapt without requiring code changes.
 
 ## Validation
 

@@ -82,7 +82,6 @@ export async function ensureDatabaseDirs(
   backupPath?: string,
 ): Promise<DatabaseDirs> {
   const dirs = getDatabaseDirs(dbPath, dbName, backupPath);
-  console.log(dirs);
   for (const [name, dirPath] of Object.entries(dirs)) {
     try {
       await Deno.mkdir(dirPath as string, { recursive: true });

@@ -60,14 +60,6 @@ const config = {
     validationMethod: "static",
   },
 
-  index: {
-    defaultLevel: "match",
-    optimizationThreshold: 10000,
-    autoOptimize: true,
-    enableCache: true,
-    maxCacheSize: 50,
-  },
-
   logging: {
     // More verbose logging in development
     level: "info",
