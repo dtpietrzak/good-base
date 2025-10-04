@@ -22,7 +22,6 @@ const config = {
       // Use explicit directory - override the default location
       databaseDirectory: "./main",
 
-      // Smaller files in development for easier debugging
       maxFileSize: 100,
 
       enabledBackups: true,
@@ -33,7 +32,7 @@ const config = {
     // You can add more databases here:
     // analytics: {
     //   databaseDirectory: "/Volumes/FastSSD/analytics",
-    //   backupDirectory: "/Volumes/BackupDrive/analytics-backups", 
+    //   backupDirectory: "/Volumes/BackupDrive/analytics-backups",
     //   enabledBackups: true,
     //   backupInterval: 6,
     //   maxFileSize: 500,
@@ -41,16 +40,15 @@ const config = {
   },
 
   server: {
-    // Use port 3000 in development, 8080 in production
     port: 7777,
     host: "localhost",
 
-    enableCors: true,
     // Restrict CORS in production
+    enableCors: true,
     corsOrigins: ["*"],
 
     requestTimeout: 30,
-    maxBodySize: 10,
+    maxBodySize: 10, // in MB
   },
 
   auth: {

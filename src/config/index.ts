@@ -9,7 +9,7 @@ import {
 } from "./directories.ts";
 import { loadConfigFromFile } from "./loadFromFile.ts";
 import { mergeEnvOverrides } from "./mergeEnvOverrides.ts";
-import { setConfig } from "./state.ts";
+import { setConfig, setDirectories } from "./state.ts";
 import { validateConfig } from "./validateConfig.ts";
 
 /** Initialize the configuration system */
@@ -27,6 +27,7 @@ export async function initializeConfig(): Promise<Setup> {
   //   create any missing directories
   //       create app dirs
   //       create database dirs
+  //       set directories in state
   //   warn if any config options are deprecated or unknown
   //   return config and all directories
   // else
@@ -70,6 +71,12 @@ export async function initializeConfig(): Promise<Setup> {
         }),
       ),
     );
+    //       set directories in state
+    setDirectories({
+      app: appDirs,
+      databases: databaseDirs,
+    });
+
     //   TODO: warn if any config options are deprecated or unknown
 
     //   return config and all directories

@@ -18,26 +18,26 @@ async function main() {
   if (!Deno.env.get("DENO_ENV")) Deno.env.set("DENO_ENV", "production");
 
   try {
-    const { config } = await initializeConfig();
-    if (config.cli.enableColors === false) setColorEnabled(false);
+    const setup = await initializeConfig();
+    if (setup.config.cli.enableColors === false) setColorEnabled(false);
 
     console.log(
       `${gray("Databases:")}\n${
-        Object.keys(config.databases).map((name) => `  - ${name}`)
+        Object.keys(setup.config.databases).map((name) => `  - ${name}`)
           .join("\n")
       }`,
     );
     console.log("");
 
     const server = Deno.serve({
-      port: config.server.port,
-      hostname: config.server.host,
+      port: setup.config.server.port,
+      hostname: setup.config.server.host,
       onListen: () => {},
     }, async (request: Request) => {
       return await timeoutWrapper({
         request: request,
         requestHandler: handleHttpRequest,
-        timeoutSeconds: config.server.requestTimeout,
+        timeoutSeconds: setup.config.server.requestTimeout,
       });
     });
 
@@ -52,7 +52,7 @@ async function main() {
     console.log(
       cyan(
         `${bold("Server")} running on ${
-          bold(`http://${config.server.host}:${config.server.port}/`)
+          bold(`http://${setup.config.server.host}:${setup.config.server.port}/`)
         }`,
       ),
     );
@@ -60,7 +60,7 @@ async function main() {
     console.log(cyan(`   ${bold("GET  /help")}       Get some help`));
     console.log(cyan(`   ${bold("POST /<command>")}  Execute a command\n`));
 
-    await runCli(config);
+    await runCli(setup);
 
     // Shutdown server when CLI exits
     await server.shutdown();

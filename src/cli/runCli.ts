@@ -1,39 +1,21 @@
-import {
-  Processes,
-  processes,
-  ProcessKeys,
-  rootCommands,
-} from "../_constants.ts";
+import { processes, ProcessKeys, rootCommands } from "../_constants.ts";
 import { processHandler } from "./handleProcessCli.ts";
 import { parseArgs } from "./argParser.ts";
 import { CommandHistory, readInputWithHistory } from "./commandHistory.ts";
 import { cliAuthManager } from "./authManager.ts";
-import { GoodBaseConfig } from "../config/_types.ts";
+import { Setup } from "../config/_types.ts";
 import { logger } from "../_utils/logger/index.ts";
+import { path } from "../_utils/path.ts";
 
-/**
- * Log special commands like help, exit, etc.
- */
-async function logSpecialCommand(
-  command: string,
-  args: Record<string, unknown>,
-): Promise<void> {
-  const authId = cliAuthManager.getCurrentAuth();
-  const log = logger({ type: "command" });
-  await log.command({
-    timestamp: new Date().toISOString(),
-    command,
-    args,
-    auth: authId ?? null,
-    event: "CALL",
-  });
-}
-
-export async function runCli(config: GoodBaseConfig) {
+export async function runCli(setup: Setup) {
+  const historyFilePath = path(
+    setup.directories.app.logs,
+    setup.config.cli.historyFile ?? "./.command_history",
+  );
   const history = new CommandHistory({
-    historyFile: config.cli.historyFile,
-    historySize: config.cli.historySize,
-    persistentHistory: config.cli.persistentHistory,
+    historyFilePath: historyFilePath,
+    historySize: setup.config.cli.historySize,
+    persistentHistory: setup.config.cli.persistentHistory,
   });
 
   // Initialize history from file
@@ -41,7 +23,7 @@ export async function runCli(config: GoodBaseConfig) {
 
   while (true) {
     // Print the prompt without a newline
-    await Deno.stdout.write(new TextEncoder().encode(config.cli.prompt));
+    await Deno.stdout.write(new TextEncoder().encode(setup.config.cli.prompt));
 
     // Read user input with history support
     const input = await readInputWithHistory(history);
@@ -54,37 +36,47 @@ export async function runCli(config: GoodBaseConfig) {
     // Add to history
     await history.addCommand(input);
 
+    // Parse command and arguments
+    const parts = input.trim().split(/\s+/);
+    const command = parts[0].toLowerCase();
+    const commandArgs = parts.slice(1);
+    const parsedArgs = parseArgs(commandArgs);
+    // get authId
+    const authId = cliAuthManager.getCurrentAuth();
+
+    await logger({ type: "command" }).command({
+      timestamp: new Date().toISOString(),
+      command: command,
+      args: parsedArgs,
+      auth: parsedArgs["auth"] ? parsedArgs["auth"] as string : authId ?? null,
+      event: "CALL",
+    });
+
     // Check if user wants to exit
     if (input.toLowerCase() === "exit") {
-      await logSpecialCommand("exit", {});
       console.log("Goodbye!");
       break;
     }
 
     // Check if user wants help
     if (input.toLowerCase() === "help") {
-      await logSpecialCommand("help", {});
       showHelp();
       continue;
     }
 
     if (input.toLowerCase() === "index-help") {
-      await logSpecialCommand("index-help", {});
       showIndexHelp();
       continue;
     }
 
-    // Parse command and arguments
-    const parts = input.trim().split(/\s+/);
-    const command = parts[0].toLowerCase();
-    const commandArgs = parts.slice(1);
-    const parsedArgs = parseArgs(commandArgs);
     // if an arg comes in as a single letter, map it to its full arg
     for (const [key, value] of Object.entries(parsedArgs)) {
-      const expectedArgsForCommand = Object.keys(
-        (processes[command] as Processes<ProcessKeys>)?.args ||
-          (rootCommands.find((cmd) => cmd.command === command)?.args || {}),
-      );
+      const processConfig = processes[command as ProcessKeys];
+      const expectedArgsForCommand = processConfig
+        ? Object.keys(processConfig.args)
+        : Object.keys(
+          rootCommands.find((cmd) => cmd.command === command)?.args || {},
+        );
 
       if (key.length === 1) {
         const fullArg = expectedArgsForCommand.find((arg) =>
@@ -97,10 +89,13 @@ export async function runCli(config: GoodBaseConfig) {
       }
     }
 
+    const authToken = cliAuthManager.getCurrentAuth();
+
     // Switch on the command
     await processHandler({
-      process: command as ProcessKeys,
-      parsedArgs: parsedArgs as Processes<ProcessKeys>["args"],
+      processKey: command as ProcessKeys,
+      parsedArgs: parsedArgs,
+      authToken: authToken,
     });
   }
 }
@@ -120,11 +115,14 @@ function showHelp(): void {
     console.log(`${cmd.command.padEnd(20)} - ${cmd.description}`);
 
     // Show arguments on indented lines
-    const argNames = Object.keys(cmd.args) as never[];
+    const argNames = Object.keys(cmd.args);
     if (argNames.length > 0) {
       for (const argName of argNames) {
         console.log(
-          `    -${argName[0]} or --${argName} <${cmd.args[argName]}>`,
+          `    -${argName[0]} or --${argName} <${
+            (cmd.args as Record<string, { description: string }>)[argName]
+              .description
+          }>`,
         );
       }
     }

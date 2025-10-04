@@ -6,14 +6,14 @@ export class CommandHistory {
 
   constructor(
     private historyConfig: { 
-      historyFile?: string; 
+      historyFilePath?: string; 
       historySize: number;
       persistentHistory: boolean;
     },
   ) {}
 
   async initialize(): Promise<void> {
-    if (this.historyConfig.persistentHistory && this.historyConfig.historyFile) {
+    if (this.historyConfig.persistentHistory && this.historyConfig.historyFilePath) {
       await this.loadHistoryFromFile();
     }
   }
@@ -24,7 +24,7 @@ export class CommandHistory {
       this.commandCount++;
       
       // Persist to file if configured and persistent history is enabled
-      if (this.historyConfig.persistentHistory && this.historyConfig.historyFile) {
+      if (this.historyConfig.persistentHistory && this.historyConfig.historyFilePath) {
         await this.appendCommandToFile(command);
       }
       
@@ -34,7 +34,7 @@ export class CommandHistory {
       }
       
       // Check if we need to clean up the file periodically
-      if (this.historyConfig.persistentHistory && this.historyConfig.historyFile && this.shouldCleanupFile()) {
+      if (this.historyConfig.persistentHistory && this.historyConfig.historyFilePath && this.shouldCleanupFile()) {
         await this.cleanupHistoryFile();
       }
     }
@@ -83,7 +83,7 @@ export class CommandHistory {
 
   private async loadHistoryFromFile(): Promise<void> {
     try {
-      const historyContent = await Deno.readTextFile(this.historyConfig.historyFile!);
+      const historyContent = await Deno.readTextFile(this.historyConfig.historyFilePath!);
       const lines = historyContent
         .split('\n')
         .map(line => line.trim())
@@ -97,7 +97,7 @@ export class CommandHistory {
       // If file doesn't exist or can't be read, start with empty history
       if (!(error instanceof Deno.errors.NotFound)) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`Warning: Could not load command history from ${this.historyConfig.historyFile}: ${errorMessage}`);
+        console.warn(`Warning: Could not load command history from ${this.historyConfig.historyFilePath}: ${errorMessage}`);
       }
       this.history = [];
       this.commandCount = 0;
@@ -107,30 +107,30 @@ export class CommandHistory {
   private async saveHistoryToFile(): Promise<void> {
     try {
       // Ensure the directory exists
-      const historyDir = this.historyConfig.historyFile!.split('/').slice(0, -1).join('/');
+      const historyDir = this.historyConfig.historyFilePath!.split('/').slice(0, -1).join('/');
       if (historyDir) {
         await Deno.mkdir(historyDir, { recursive: true });
       }
       
       // Write history to file
       const historyContent = this.history.join('\n') + '\n';
-      await Deno.writeTextFile(this.historyConfig.historyFile!, historyContent);
+      await Deno.writeTextFile(this.historyConfig.historyFilePath!, historyContent);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Warning: Could not save command history to ${this.historyConfig.historyFile}: ${errorMessage}`);
+      console.warn(`Warning: Could not save command history to ${this.historyConfig.historyFilePath}: ${errorMessage}`);
     }
   }
 
   private async appendCommandToFile(command: string): Promise<void> {
     try {
       // Ensure the directory exists
-      const historyDir = this.historyConfig.historyFile!.split('/').slice(0, -1).join('/');
+      const historyDir = this.historyConfig.historyFilePath!.split('/').slice(0, -1).join('/');
       if (historyDir) {
         await Deno.mkdir(historyDir, { recursive: true });
       }
       
       // Append command to file
-      const file = await Deno.open(this.historyConfig.historyFile!, { 
+      const file = await Deno.open(this.historyConfig.historyFilePath!, { 
         create: true, 
         append: true 
       });
@@ -139,14 +139,14 @@ export class CommandHistory {
       file.close();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Warning: Could not append command to history file ${this.historyConfig.historyFile}: ${errorMessage}`);
+      console.warn(`Warning: Could not append command to history file ${this.historyConfig.historyFilePath}: ${errorMessage}`);
     }
   }
 
   private async cleanupHistoryFile(): Promise<void> {
     try {
       // Read the current file to get the total count
-      const historyContent = await Deno.readTextFile(this.historyConfig.historyFile!);
+      const historyContent = await Deno.readTextFile(this.historyConfig.historyFilePath!);
       const allLines = historyContent
         .split('\n')
         .map(line => line.trim())
@@ -156,14 +156,14 @@ export class CommandHistory {
       if (allLines.length > this.historyConfig.historySize) {
         const trimmedHistory = allLines.slice(-this.historyConfig.historySize);
         const historyContent = trimmedHistory.join('\n') + '\n';
-        await Deno.writeTextFile(this.historyConfig.historyFile!, historyContent);
+        await Deno.writeTextFile(this.historyConfig.historyFilePath!, historyContent);
         
         // Reset command count since we just cleaned up
         this.commandCount = 0;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Warning: Could not cleanup command history file ${this.historyConfig.historyFile}: ${errorMessage}`);
+      console.warn(`Warning: Could not cleanup command history file ${this.historyConfig.historyFilePath}: ${errorMessage}`);
     }
   }
 

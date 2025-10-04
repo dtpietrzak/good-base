@@ -1,31 +1,32 @@
+import { bold, cyan, yellow } from "@std/fmt/colors";
 import { cliAuthManager } from "../cli/authManager.ts";
 
 type AuthCommandProps = {
   key?: string;
-  close?: string;
-  status?: string;
+  close: boolean;
+  status: boolean;
 };
 
 export default function auth(props: AuthCommandProps) {
   const { key, close, status } = props;
 
   // Handle --close flag
-  if (close !== undefined) {
+  if (close === true) {
     cliAuthManager.clearAuth();
     return { success: true, data: "Auth cleared" };
   }
 
   // Handle --status flag
-  if (status !== undefined) {
+  if (status === true) {
     const authInfo = cliAuthManager.getAuthInfo();
-    
+
     if (!authInfo.hasAuth) {
       console.log("❌ No active auth session");
       return { success: true, data: "No auth session" };
     }
 
     const remainingMinutes = cliAuthManager.getRemainingMinutes();
-    
+
     if (remainingMinutes === null) {
       console.log("✅ Auth active (no expiration)");
     } else if (remainingMinutes > 0) {
@@ -34,13 +35,13 @@ export default function auth(props: AuthCommandProps) {
       console.log("⚠ Auth expired");
     }
 
-    return { 
-      success: true, 
-      data: { 
-        hasAuth: authInfo.hasAuth, 
+    return {
+      success: true,
+      data: {
+        hasAuth: authInfo.hasAuth,
         remainingMinutes,
-        timeoutMinutes: authInfo.timeoutMinutes 
-      } 
+        timeoutMinutes: authInfo.timeoutMinutes,
+      },
     };
   }
 
@@ -51,25 +52,29 @@ export default function auth(props: AuthCommandProps) {
   }
 
   // No arguments provided - show usage
-  console.log("Usage:");
-  console.log("  auth --key <token>  - Set authentication token");
-  console.log("  auth --close        - Clear current authentication");
-  console.log("  auth --status       - Show current auth status");
+  console.log(cyan(`\nUsage: ${bold("auth")}`));
+  console.log(
+    cyan(`  --key <token> Set authentication token ${yellow("[-k]")}`),
+  );
+  console.log(cyan(`  --close Clear current authentication ${yellow("[-c]")}`));
+  console.log(cyan(`  --status Show current auth status ${yellow("[-s]")}`));
   console.log("");
-  
+
   const authInfo = cliAuthManager.getAuthInfo();
   if (authInfo.hasAuth) {
     const remainingMinutes = cliAuthManager.getRemainingMinutes();
     if (remainingMinutes === null) {
       console.log("Current: ✅ Auth active (no expiration)");
     } else if (remainingMinutes > 0) {
-      console.log(`Current: ✅ Auth active (expires in ${remainingMinutes} minutes)`);
+      console.log(
+        `Current: ✅ Auth active (expires in ${remainingMinutes} minutes)`,
+      );
     } else {
       console.log("Current: ⚠ Auth expired");
     }
   } else {
     console.log("Current: ❌ No active auth session");
-  }
+  };
 
-  return { success: true, data: "Auth command help displayed" };
+  throw new Error("No arguments provided.");
 }

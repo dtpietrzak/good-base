@@ -1,4 +1,4 @@
-import { z } from "npm:zod";
+import { z } from "zod";
 
 const DatabasesSchema = z.record(
   z.string().min(1),

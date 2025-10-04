@@ -1,12 +1,11 @@
-import type { Command, Process } from "./_types.ts";
+import type { Command, ProcessWithSchema } from "./_types.ts";
+import { z } from "zod";
 import echo from "./processes/echo.ts";
 import create from "./processes/ops/create.ts";
 import read from "./processes/ops/read.ts";
 import config from "./processes/config.ts";
 import auth from "./processes/auth.ts";
-import databaseCreate from "./processes/database/database-create.ts";
 import databaseList from "./processes/database/database-list.ts";
-import databaseDelete from "./processes/database/database-delete.ts";
 
 export const types = [
   "string",
@@ -27,6 +26,9 @@ export const indexLevels = [
 
 export type ProcessKeys = keyof typeof processes;
 export type Processes<C extends ProcessKeys> = typeof processes[C];
+
+// Helper to create optional description
+const optional = (desc: string) => `(Optional) ${desc}`;
 
 export const rootCommands: Command[] = [
   {
@@ -49,149 +51,225 @@ export const rootCommands: Command[] = [
   } as const,
 ] as const;
 
-export const processes: Record<string, Process> = {
+export const processes = {
   echo: {
     command: "echo",
-    args: { "text": "Text to echo back" },
+    args: {
+      text: {
+        schema: z.string(),
+        description: "Text to echo back",
+      },
+    },
     description: "Echo back any text you type",
     function: echo,
     on: { cli: true, http: false },
-  } as const,
+  } satisfies ProcessWithSchema,
   read: {
     command: "read",
     args: {
-      db: "Database to read from",
-      index: "Index of the item to read",
-      key: "Key of the item to read",
-      auth: "Authentication token",
+      db: {
+        schema: z.string(),
+        description: "Database to read from",
+      },
+      index: {
+        schema: z.string(),
+        description: "Index of the item to read",
+      },
+      key: {
+        schema: z.string(),
+        description: "Key of the item to read",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
     },
     description: "Read an item by index and key",
     function: read,
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   create: {
     command: "create",
     args: {
-      db: "Database to create the item in",
-      index: "Index of the item to create",
-      key: "Key of the item to create",
-      value: "Value to create",
-      auth: "Authentication token",
-      upsert:
-        "(Optional) Whether to upsert if the key exists (true/false) default: true",
+      db: {
+        schema: z.string(),
+        description: "Database to create the item in",
+      },
+      index: {
+        schema: z.string(),
+        description: "Index of the item to create",
+      },
+      key: {
+        schema: z.string(),
+        description: "Key of the item to create",
+      },
+      value: {
+        schema: z.string(),
+        description: "Value to create",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
+      upsert: {
+        schema: z.boolean().optional().default(true),
+        description: optional("Whether to upsert if the key exists (default: true)"),
+      },
     },
     description: "Create an item with an index, key and value",
     function: create,
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   search: {
     command: "search",
     args: {
-      db: "Database to search in",
-      index: "Index of the item to search",
-      query: "Query to search for",
-      auth: "Authentication token",
-      limit: "(Optional) Limit the number of results returned",
-      offset: "(Optional) Offset the results by this number",
+      db: {
+        schema: z.string(),
+        description: "Database to search in",
+      },
+      index: {
+        schema: z.string(),
+        description: "Index of the item to search",
+      },
+      query: {
+        schema: z.string(),
+        description: "Query to search for",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
+      limit: {
+        schema: z.number().optional(),
+        description: optional("Limit the number of results returned"),
+      },
+      offset: {
+        schema: z.number().optional(),
+        description: optional("Offset the results by this number"),
+      },
     },
     description: "Search for items in an index",
     function: () => {
       throw new Error("Not implemented yet");
     },
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   "index-create": {
     command: "index-create",
     args: {
-      db: "Database to create the index in",
-      name: "Name of the index to create",
-      level:
-        `Level of the indexing (match: only index exact matches, traverse: index keys to be retrieved in sorted orders, full: index all values for full text search) - For more details use the index-help command.`,
-      field: "Field to index",
-      auth: "Authentication token",
+      db: {
+        schema: z.string(),
+        description: "Database to create the index in",
+      },
+      name: {
+        schema: z.string(),
+        description: "Name of the index to create",
+      },
+      level: {
+        schema: z.enum(["match", "traverse", "full"]),
+        description: "Level of the indexing (match: only index exact matches, traverse: index keys to be retrieved in sorted orders, full: index all values for full text search) - For more details use the index-help command.",
+      },
+      field: {
+        schema: z.string(),
+        description: "Field to index",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
     },
     description: "Create a new index",
     function: () => {
       throw new Error("Not implemented yet");
     },
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   "index-list": {
     command: "index-list",
     args: {
-      db: "Database to list indexes from",
-      auth: "Authentication token",
+      db: {
+        schema: z.string(),
+        description: "Database to list indexes from",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
     },
     description: "List all indexes",
     function: () => {
       throw new Error("Not implemented yet");
     },
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   "index-delete": {
     command: "index-delete",
     args: {
-      db: "Database to delete the index from",
-      name: "Name of the index to delete",
-      auth: "Authentication token",
+      db: {
+        schema: z.string(),
+        description: "Database to delete the index from",
+      },
+      name: {
+        schema: z.string(),
+        description: "Name of the index to delete",
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
     },
     description: "Delete an index",
     function: () => {
       throw new Error("Not implemented yet");
     },
     on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   config: {
     command: "config",
     args: {
-      key:
-        "(Optional) Specific configuration key to show (e.g., 'database.dataDirectory')",
+      key: {
+        schema: z.string().optional(),
+        description: optional("Specific configuration key to show (e.g., 'database.dataDirectory')"),
+      },
     },
     description: "Show or manage configuration settings",
     function: config,
     on: { cli: true, http: false },
-  } as const,
+  } satisfies ProcessWithSchema,
   auth: {
     command: "auth",
     args: {
-      key: "(Optional) Authentication token to set",
-      close: "(Optional) Clear current authentication session",
-      status: "(Optional) Show current authentication status",
+      key: {
+        schema: z.string().optional(),
+        description: optional("Authentication token to set, setting this allows you to skip passing --auth on each command. Use 'auth --close' to clear."),
+      },
+      close: {
+        schema: z.boolean().optional().default(false),
+        description: optional("Clear current authentication session"),
+      },
+      status: {
+        schema: z.boolean().optional().default(false),
+        description: optional("Show current authentication status"),
+      },
     },
     description: "Manage CLI authentication session",
     function: auth,
     on: { cli: true, http: false },
-  } as const,
-  "database-create": {
-    command: "database-create",
-    args: {
-      name: "Name of the database to create",
-      description: "(Optional) Description of the database",
-      auth: "Authentication token",
-    },
-    description: "Create a new database",
-    function: databaseCreate,
-    on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
   "database-list": {
     command: "database-list",
     args: {
-      verbose: "(Optional) Show detailed information about each database",
-      auth: "Authentication token",
+      verbose: {
+        schema: z.boolean().optional().default(false),
+        description: optional("Show detailed information about each database"),
+      },
+      auth: {
+        schema: z.string(),
+        description: "Authentication token*",
+      },
     },
     description: "List all databases",
     function: databaseList,
     on: { cli: true, http: true },
-  } as const,
-  "database-delete": {
-    command: "database-delete",
-    args: {
-      name: "Name of the database to delete",
-      force: "(Optional) Skip confirmation prompt",
-      auth: "Authentication token",
-    },
-    description: "Delete a database and all its contents",
-    function: databaseDelete,
-    on: { cli: true, http: true },
-  } as const,
+  } satisfies ProcessWithSchema,
 } as const;

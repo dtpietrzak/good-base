@@ -17,6 +17,7 @@
     "jsr:@std/path@^1.1.1": "1.1.2",
     "jsr:@std/path@^1.1.2": "1.1.2",
     "jsr:@std/streams@^1.0.10": "1.0.12",
+    "npm:json5@^2.2.3": "2.2.3",
     "npm:zod@*": "4.1.11",
     "npm:zod@^4.1.11": "4.1.11"
   },
@@ -76,6 +77,10 @@
     }
   },
   "npm": {
+    "json5@2.2.3": {
+      "integrity": "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==",
+      "bin": true
+    },
     "zod@4.1.11": {
       "integrity": "sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg=="
     }
@@ -171,6 +176,7 @@
       "jsr:@std/fmt@^1.0.8",
       "jsr:@std/http@^1.0.20",
       "jsr:@std/path@^1.1.2",
+      "npm:json5@^2.2.3",
       "npm:zod@^4.1.11"
     ]
   }

@@ -1,91 +1,90 @@
 import { processes, ProcessKeys } from "../_constants.ts";
 import { ApiResponse } from "../_types.ts";
+import { z } from "zod";
 
-export async function handleProcessRequest(
-  process: string,
-  body: Record<string, unknown>,
-  authToken: string | null,
-): Promise<ApiResponse> {
-  const processKey = process as ProcessKeys;
-  const processConfig = processes[processKey];
+type RequestProcessHandlerProps = {
+  processKey: ProcessKeys;
+  parsedArgs: Record<string, string | boolean>;
+  authToken: string | null;
+};
+
+export const handleProcessRequest = async (
+  props: RequestProcessHandlerProps,
+): Promise<ApiResponse> => {
+  if (!props.processKey) {
+    throw new Error(
+      "No process provided. Use '/help' for available processes.",
+    );
+  }
+
+  const processConfig = processes[props.processKey];
 
   if (!processConfig) {
     return {
       success: false,
-      error: `Unknown process: ${process}`,
+      error:
+        `Unknown process: ${props.processKey}. Use '/help' for available processes.`,
     };
   }
 
-  // Add auth token to the body if provided
-  const requestArgs = { ...body };
-  if (authToken && !requestArgs.auth) {
-    requestArgs.auth = authToken;
-  }
+  const argsToValidate = {
+    ...props.parsedArgs,
+    auth: props.authToken ?? undefined,
+  };
 
-  // Validate required arguments
-  const requiredArgs = Object.entries(processConfig.args)
-    .filter(([, desc]) => !desc.startsWith("(Optional)"))
-    .map(([argName]) => argName);
+  const schema = buildZodSchema(processConfig.args);
+  const validationResult = schema.safeParse(argsToValidate);
 
-  const missingAuth = requiredArgs.includes("auth") && !requestArgs["auth"];
-  if (missingAuth) {
+  if (!validationResult.success) {
+    const errors = z.flattenError(validationResult.error).fieldErrors;
+
     return {
       success: false,
-      error: `Missing required authorization`,
-      info: {
-        headers: {
-          authorization: "Bearer <token>",
-        },
-      },
-    };
-  }
-
-  const missingArgs = requiredArgs
-    .filter((arg) => arg !== "auth")
-    .filter((arg) => !(arg in requestArgs));
-
-  if (missingArgs.length > 0) {
-    return {
-      success: false,
-      error: `Missing required arguments: ${missingArgs.join(", ")}`,
-      info: {
-        usage: {
-          process: process,
-          body: Object.entries(processConfig.args).reduce(
-            (acc, [key, value]) => {
-              if (key === "auth") return acc;
-              acc[key] = value;
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
-        },
-      },
+      error: errors ?? "Invalid arguments provided",
     };
   }
 
   try {
-    const processFunction = processConfig.function;
-    if (!processFunction) {
+    if (!processConfig.function) {
       return {
         success: false,
-        error: `No function defined for process '${process}'`,
+        error: `No function defined for process '${props.processKey}'`,
       };
     }
 
-    // Execute the process function
-    const result = await processFunction(requestArgs);
+    const processResult = await processConfig.function(
+      // deno-lint-ignore no-explicit-any
+      validationResult.data as any,
+    );
+
+    if (!processResult.success) {
+      return {
+        success: false,
+        // @ts-expect-error - processResult.error exists if success is false
+        error: processResult?.error || `Process '${props.processKey}' failed`,
+      };
+    }
 
     return {
       success: true,
-      data: result.data,
-      info: `Process '${process}' executed successfully`,
+      data: processResult.data,
+      info: `Process '${props.processKey}' executed successfully`,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       success: false,
-      error: `Error executing process '${process}': ${errorMessage}`,
+      error: `Error executing process '${props.processKey}': ${errorMessage}`,
     };
   }
+};
+
+function buildZodSchema(
+  args: Record<string, { schema: z.ZodTypeAny; description: string }>,
+) {
+  const schemaShape: Record<string, z.ZodTypeAny> = {};
+  for (const [key, { schema }] of Object.entries(args)) {
+    schemaShape[key] = schema;
+  }
+  return z.object(schemaShape);
 }
