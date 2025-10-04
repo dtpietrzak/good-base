@@ -11,7 +11,7 @@ import {
   gray,
   green,
   setColorEnabled,
-} from "jsr:@std/fmt/colors";
+} from "@std/fmt/colors";
 
 async function main() {
   console.log(brightMagenta("\n\ngood-base initializing...\n"));
@@ -52,7 +52,9 @@ async function main() {
     console.log(
       cyan(
         `${bold("Server")} running on ${
-          bold(`http://${setup.config.server.host}:${setup.config.server.port}/`)
+          bold(
+            `http://${setup.config.server.host}:${setup.config.server.port}/`,
+          )
         }`,
       ),
     );

@@ -1,4 +1,4 @@
-import { z } from "npm:zod";
+import { z } from "zod";
 import { GoodBaseConfigSchema } from "./_schema.ts";
 
 export type GoodBaseConfig = z.infer<typeof GoodBaseConfigSchema>;

@@ -1,5 +1,5 @@
 import type { AuthProps } from "../_types.ts";
-import { getDirectories } from "../../config/state.ts";
+import { getConfig, getDirectories } from "../../config/state.ts";
 import { z } from "zod";
 import JSON5 from "json5";
 
@@ -20,10 +20,16 @@ type DatabaseItem = {
   id: string;
   createdAt: string;
   updatedAt: string | null;
-  auths: string[];
+  auth: {
+    read: string[];
+    update: string[];
+    delete: string[];
+  };
 };
 
 export default async function create(props: CreateProps) {
+  const config = getConfig();
+  const dbConfig = config.databases[props.db];
   const directories = getDirectories();
   if (!directories.databases[props.db]) {
     return {
@@ -94,6 +100,10 @@ export default async function create(props: CreateProps) {
     parsedValue = valueSchema.parse(parsedValue);
     // if it passes, we are good
     // otherwise, it will throw and be caught below
+    delete parsedValue.id;
+    delete parsedValue.createdAt;
+    delete parsedValue.updatedAt;
+    delete parsedValue.auth;
   } catch (error) {
     return {
       success: false,
@@ -103,49 +113,64 @@ export default async function create(props: CreateProps) {
 
   const savePath = `${dbDataBasePath}/${props.index}/${props.key}.json`;
   try {
-    const existingData = await Deno.readTextFile(savePath)
+    const existingData = await Deno
+      .readTextFile(savePath)
       .catch(() => undefined);
-    if (existingData) {
-      if (props.upsert === true) {
-        const parsedExistingData = JSON.parse(existingData) as DatabaseItem;
-        if (parsedExistingData.auths.includes(props.auth) === false) {
-          return {
-            success: false,
-            error:
-              "Unauthorized - You do not have permission to modify this item",
-          };
-        }
-        if (typeof parsedExistingData === "object") {
-          const newData = {
-            ...parsedExistingData,
-            ...parsedValue,
-            updatedAt: new Date().toISOString(),
-          };
-          await Deno.writeTextFile(savePath, JSON.stringify(newData, null, 2));
-          return { success: true, data: newData };
-        } else {
-          return {
-            success: false,
-            error: "Existing data is not an object, cannot upsert",
-          };
-        }
-      } else {
+
+    if (!props.upsert) {
+      if (existingData) {
         return {
           success: false,
           error: "Key already exists - Use upsert to merge",
         };
       }
-    } else {
-      const createValue = {
+
+      const createValue: DatabaseItem = {
         ...parsedValue,
         id: props.key,
         createdAt: new Date().toISOString(),
         updatedAt: null,
-        auths: [props.auth],
+        auth: {
+          read: [props.auth],
+          update: [props.auth],
+          delete: [props.auth],
+        },
       };
       // save new file
-      await Deno.writeTextFile(savePath, JSON.stringify(createValue, null, 2));
+      await Deno.writeTextFile(
+        savePath,
+        JSON.stringify(createValue, null, 2),
+      );
       return { success: true, data: createValue };
+    } else {
+      const parsedExistingData: DatabaseItem = existingData
+        ? JSON.parse(existingData)
+        : {
+          id: props.key,
+          createdAt: new Date().toISOString(),
+          updatedAt: null,
+          auth: {
+            read: [props.auth],
+            update: [props.auth],
+            delete: [props.auth],
+          },
+        };
+
+      if (parsedExistingData.auth.update.includes(props.auth) === false) {
+        return {
+          success: false,
+          error:
+            "Unauthorized - You do not have permission to modify this item",
+        };
+      }
+
+      const newData = {
+        ...parsedExistingData,
+        ...parsedValue,
+        updatedAt: new Date().toISOString(),
+      };
+      await Deno.writeTextFile(savePath, JSON.stringify(newData, null, 2));
+      return { success: true, data: newData };
     }
     // deno-lint-ignore no-explicit-any
   } catch (error: any) {

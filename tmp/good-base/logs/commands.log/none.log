@@ -203,3 +203,9 @@
 [2025-10-04T01:44:03.150Z] [NONE] {"timestamp":"2025-10-04T01:44:03.150Z","command":"auth","args":{"key":"abc-123"},"auth":null,"event":"RESULT"}
 [2025-10-04T01:44:04.358Z] [NONE] {"timestamp":"2025-10-04T01:44:04.358Z","command":"create","args":{"d":"main","i":"primary","k":"test","v":"{name:\"john\"}","upsert":true},"auth":"abc-123","event":"CALL"}
 [2025-10-04T01:44:04.367Z] [NONE] {"timestamp":"2025-10-04T01:44:04.366Z","command":"create","args":{"upsert":true,"db":"main","index":"primary","key":"test","value":"{name:\"john\"}"},"auth":"abc-123","event":"RESULT"}
+[2025-10-04T03:44:41.864Z] [NONE] {"timestamp":"2025-10-04T03:44:41.863Z","command":"auth","args":{"k":"abc-123"},"auth":null,"event":"CALL"}
+[2025-10-04T03:44:41.867Z] [NONE] {"timestamp":"2025-10-04T03:44:41.867Z","command":"auth","args":{"key":"abc-123"},"auth":null,"event":"RESULT"}
+[2025-10-04T03:44:45.007Z] [NONE] {"timestamp":"2025-10-04T03:44:45.007Z","command":"create","args":{"d":"main","i":"primary","k":"test","v":"{name:\"john\"}","upsert":true},"auth":"abc-123","event":"CALL"}
+[2025-10-04T03:44:45.015Z] [NONE] {"timestamp":"2025-10-04T03:44:45.015Z","command":"create","args":{"upsert":true,"db":"main","index":"primary","key":"test","value":"{name:\"john\"}"},"auth":"abc-123","event":"RESULT"}
+[2025-10-04T03:45:23.983Z] [NONE] {"timestamp":"2025-10-04T03:45:23.983Z","command":"create","args":{"d":"main","i":"primary","k":"test","v":"{name:\"john\"}","upsert":true},"auth":"abc-123","event":"CALL"}
+[2025-10-04T03:45:23.988Z] [NONE] {"timestamp":"2025-10-04T03:45:23.988Z","command":"create","args":{"upsert":true,"db":"main","index":"primary","key":"test","value":"{name:\"john\"}"},"auth":"abc-123","event":"RESULT"}

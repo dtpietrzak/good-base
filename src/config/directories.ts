@@ -1,4 +1,4 @@
-import { join } from "jsr:@std/path";
+import { join } from "@std/path";
 import { AppDirs, DatabaseDirs } from "./_types.ts";
 import { path } from "../_utils/path.ts";
 

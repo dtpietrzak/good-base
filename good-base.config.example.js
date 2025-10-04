@@ -22,6 +22,12 @@ const config = {
       // Use explicit directory - override the default location
       databaseDirectory: "./main",
 
+      auth: {
+        read: "system", // document | system
+        update: "document", // document | system
+        delete: "document", // document | system
+      },
+
       maxFileSize: 100,
 
       enabledBackups: true,

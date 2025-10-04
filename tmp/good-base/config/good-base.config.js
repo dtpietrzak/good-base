@@ -12,15 +12,16 @@
  * - Override: Uses GOOD_BASE_DATA_DIR environment variable if set
  */
 
-/**
- * @import { GoodBaseConfig } from "../../../config/_types.ts"
- * @type {GoodBaseConfig}
- */
 const config = {
   databases: {
     main: {
       // Use explicit directory - override the default location
       databaseDirectory: "./main",
+      auth: {
+        read: "system", // document | system
+        update: "document", // document | system
+        delete: "document", // document | system
+      },
 
       // Smaller files in development for easier debugging
       maxFileSize: 100,

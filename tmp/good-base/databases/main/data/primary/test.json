@@ -1,9 +1,17 @@
 {
-  "name": "john",
   "id": "test",
-  "createdAt": "2025-10-04T01:10:52.011Z",
-  "updatedAt": "2025-10-04T01:44:04.365Z",
-  "auths": [
-    "abc-123"
-  ]
+  "createdAt": "2025-10-04T03:45:23.987Z",
+  "updatedAt": "2025-10-04T03:45:23.987Z",
+  "auth": {
+    "read": [
+      "abc-123"
+    ],
+    "update": [
+      "abc-123"
+    ],
+    "delete": [
+      "abc-123"
+    ]
+  },
+  "name": "john"
 }

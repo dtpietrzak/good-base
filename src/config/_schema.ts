@@ -5,6 +5,14 @@ const DatabasesSchema = z.record(
   z.object({
     /** Database directory path (overrides default location) */
     databaseDirectory: z.string().min(1).optional(),
+    auth: z.object({
+      /** Auth level required to read documents */
+      read: z.enum(["document", "system"]),
+      /** Auth level required to update documents */
+      update: z.enum(["document", "system"]),
+      /** Auth level required to delete documents */
+      delete: z.enum(["document", "system"]),
+    }),
     /** Enable automatic backups */
     enabledBackups: z.boolean(),
     /** Backup directory path */
