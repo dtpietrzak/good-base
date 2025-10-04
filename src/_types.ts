@@ -1,4 +1,4 @@
-import type { z } from "npm:zod";
+import type { z } from "zod";
 
 export type Command = {
   command: string;
@@ -28,7 +28,12 @@ export type Process = Command & {
   function: (args: any) => Promise<ProcessResponse> | ProcessResponse;
 };
 
-export type ProcessResponse = { success: boolean; data: unknown };
+export type ProcessResponse = {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  info?: string | object;
+};
 
 export type ApiResponse = {
   success: boolean;

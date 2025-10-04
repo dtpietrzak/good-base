@@ -5,7 +5,7 @@ import create from "./processes/ops/create.ts";
 import read from "./processes/ops/read.ts";
 import config from "./processes/config.ts";
 import auth from "./processes/auth.ts";
-import databaseList from "./processes/database/database-list.ts";
+import databaseList from "./processes/database-list.ts";
 
 export const types = [
   "string",
@@ -242,6 +242,18 @@ export const processes = {
       key: {
         schema: z.string().optional(),
         description: optional("Authentication token to set, setting this allows you to skip passing --auth on each command. Use 'auth --close' to clear."),
+      },
+      add: {
+        schema: z.string().optional(),
+        description: optional("Add a new authentication uuid to the auth database"),
+      },
+      remove: {
+        schema: z.string().optional(),
+        description: optional("Remove an authentication uuid from the auth database"),
+      },
+      list: {
+        schema: z.boolean().optional().default(false),
+        description: optional("List all authentication uuids in the auth database"),
       },
       close: {
         schema: z.boolean().optional().default(false),

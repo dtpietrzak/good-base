@@ -1,5 +1,5 @@
-import { getConfig, getDirectories } from "../../config/state.ts";
-import type { AuthProps } from "../_types.ts";
+import { getConfig, getDirectories } from "../config/state.ts";
+import type { AuthProps } from "./_types.ts";
 
 type DatabaseListProps = AuthProps & {
   verbose?: boolean;

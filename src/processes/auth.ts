@@ -1,14 +1,18 @@
 import { bold, cyan, yellow } from "@std/fmt/colors";
 import { cliAuthManager } from "../cli/authManager.ts";
+import { getAuthDb } from "../_utils/authDb.ts";
 
 type AuthCommandProps = {
   key?: string;
-  close: boolean;
-  status: boolean;
+  close?: boolean;
+  status?: boolean;
+  add?: string;
+  remove?: string;
+  list?: boolean;
 };
 
 export default function auth(props: AuthCommandProps) {
-  const { key, close, status } = props;
+  const { key, close, status, add, remove, list } = props;
 
   // Handle --close flag
   if (close === true) {
@@ -47,8 +51,38 @@ export default function auth(props: AuthCommandProps) {
 
   // Handle setting auth key (support both --key flag and positional argument)
   if (key) {
+    const authDb = getAuthDb();
+    const hasAuth = authDb.has(key); // Validate key exists in auth DB
+    if (!hasAuth) {
+      throw new Error("Invalid auth key");
+    }
+
     cliAuthManager.setAuth(key);
     return { success: true, data: "Auth set successfully" };
+  }
+
+  if (add) {
+    const authDb = getAuthDb();
+    const added = authDb.add(add);
+    if (!added) {
+      return { success: false, data: add, error: "Failed to add" };
+    }
+    return { success: true, data: add };
+  }
+
+  if (remove) {
+    const authDb = getAuthDb();
+    const removed = authDb.remove(remove);
+    if (!removed) {
+      return { success: false, data: remove, error: "Failed to remove" };
+    }
+    return { success: true, data: remove };
+  }
+
+  if (list) {
+    const authDb = getAuthDb();
+    const keys = authDb.list(10, 0);
+    return { success: true, data: keys };
   }
 
   // No arguments provided - show usage
@@ -74,7 +108,7 @@ export default function auth(props: AuthCommandProps) {
     }
   } else {
     console.log("Current: ❌ No active auth session");
-  };
+  }
 
   throw new Error("No arguments provided.");
 }

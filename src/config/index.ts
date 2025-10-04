@@ -9,10 +9,10 @@ import {
 } from "./directories.ts";
 import { loadConfigFromFile } from "./loadFromFile.ts";
 import { mergeEnvOverrides } from "./mergeEnvOverrides.ts";
-import { setAuthDb, setConfig, setDirectories } from "./state.ts";
+import { setConfig, setDirectories } from "./state.ts";
 import { validateConfig } from "./validateConfig.ts";
-import { DatabaseSync } from "node:sqlite";
 import { path } from "../_utils/path.ts";
+import { initializeAuthDb } from "../_utils/authDb.ts";
 
 /** Initialize the configuration system */
 export async function initializeConfig(): Promise<Setup> {
@@ -32,7 +32,6 @@ export async function initializeConfig(): Promise<Setup> {
   //       set directories in state
   //   warn if any config options are deprecated or unknown
   //   initialize auth.db SQLite db
-  //       set authdb in state
   //   return config and all directories
   // else
   //   create default base paths and default config
@@ -82,11 +81,9 @@ export async function initializeConfig(): Promise<Setup> {
     });
 
     //   initialize auth.db SQLite db
-    const authDb = new DatabaseSync(
+    initializeAuthDb(
       path(appDirs.base, "auth.db"),
     );
-    //       set authdb in state
-    setAuthDb(authDb);
 
     //   TODO: warn if any config options are deprecated or unknown
 

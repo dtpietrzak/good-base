@@ -156,12 +156,14 @@ export default async function create(props: CreateProps) {
           },
         };
 
-      if (parsedExistingData.auth.update.includes(props.auth) === false) {
-        return {
-          success: false,
-          error:
-            "Unauthorized - You do not have permission to modify this item",
-        };
+      if (dbConfig.auth.update === "document") {
+        if (parsedExistingData.auth.update.includes(props.auth) === false) {
+          return {
+            success: false,
+            error:
+              "Unauthorized - You do not have permission to modify this item",
+          };
+        }
       }
 
       const newData = {

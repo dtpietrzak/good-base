@@ -54,7 +54,7 @@ loaded. You don't need to manually create them.
 
 ```bash
 # Development mode uses ./tmp/good-base/
-deno run src/main.ts
+DENO_ENV=development deno run src/main.ts
 
 # Files will be in:
 # ./tmp/good-base/data/          (databases)
@@ -66,7 +66,7 @@ deno run src/main.ts
 
 ```bash
 # Production mode uses OS conventions  
-NODE_ENV=production deno run src/main.ts
+deno run src/main.ts
 
 # On macOS, files will be in:
 # ~/Library/Application Support/good-base/data/
@@ -88,25 +88,8 @@ DATA_DIR="/var/lib/good-base" deno run src/main.ts
 
 ## Configuration
 
-The directory setup is handled automatically by the configuration system. You
-can customize it in `good-base.config.ts`:
+todo
 
-```typescript
-import { getAppDirectories } from "./src/config/directories.ts";
+## Auth
 
-// Get OS-appropriate directories
-const dirs = getAppDirectories("good-base");
-
-const config = {
-  database: {
-    dataDirectory: dirs.data, // OS-appropriate data directory
-    backupDirectory: dirs.backups, // OS-appropriate backup directory
-  },
-  logging: {
-    logDirectory: dirs.logs, // OS-appropriate log directory
-  },
-  cli: {
-    historyFile: `${dirs.config}/.good_history`, // OS-appropriate config directory
-  },
-};
-```
+todo

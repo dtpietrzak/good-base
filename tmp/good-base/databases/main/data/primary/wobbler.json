@@ -1,0 +1,17 @@
+{
+  "id": "wobbler",
+  "createdAt": "2025-10-04T22:55:23.486Z",
+  "updatedAt": "2025-10-04T22:55:23.486Z",
+  "auth": {
+    "read": [
+      "david"
+    ],
+    "update": [
+      "david"
+    ],
+    "delete": [
+      "david"
+    ]
+  },
+  "name": "johnny"
+}
